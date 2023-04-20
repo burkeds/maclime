@@ -1,12 +1,13 @@
-'''
+"""
 Created on May 18, 2022
 
 @author: Devin Burke
-'''
+"""
 import pandas as pd
 
-#Store dictionaries that map responses to arbitrary 
-#numerical values valid for a list of questions.
+
+# Store dictionaries that map responses to arbitrary
+# numerical values valid for a list of questions.
 def get_value_dict(code):
     agree_list = ['AE1(SQ001)',
                   'AE1(SQ001)',
@@ -101,7 +102,8 @@ def get_value_dict(code):
                 'Agree': 2,
                 'Strongly agree': 3}
 
-#An array of responses passed returns an array of scored values using value_dict
+
+# An array of responses passed returns an array of scored values using value_dict
 def get_scored_data(code, data):
     data = [None if pd.isna(i) else i for i in data]
     value = get_value_dict(code)

@@ -38,9 +38,13 @@ __all__ = ['include_all',
            'inc_under_fem',
            'inc_under_mal',
            'inc_grad_fem',
-           'inc_grad_mal']
+           'inc_grad_mal',
+           'get_true_count',
+           'subtract_include']
 
-#Returns an include array of True/False values for a given code and response
+# Returns an include array of True/False values for a given code and response
+
+
 def get_include_array(code, inc):
     col_i = -1
     resps = [False]*all_respondents
@@ -55,8 +59,10 @@ def get_include_array(code, inc):
         row += 1
     return resps
 
-#Use logic to combine include arrays. 'OR' is default logic.
-#Returns a new array
+# Use logic to combine include arrays. 'OR' is default logic.
+# Returns a new array
+
+
 def combine_include(*args, logic='OR'):
     logics = ['OR', 'AND']
     if logic not in logics:
@@ -71,22 +77,24 @@ def combine_include(*args, logic='OR'):
             booltest.append(x[row])
         if logic == 'OR':
             for y in booltest:
-                if y == True:
+                if y:
                     include[row] = True
                     break
         if logic == 'AND':
             for y in booltest:
-                if y == False:
+                if not y:
                     break
             else:
                 include[row] = True               
         row += 1
     return include
 
-#All respondent arrays after the first are subtracted from the first.
-#For each boolean in the first array, if any boolean of the same index in
-#another array is True, the value in the first array becomes False.
-#Returns a new array
+# All respondent arrays after the first are subtracted from the first.
+# For each boolean in the first array, if any boolean of the same index in
+# another array is True, the value in the first array becomes False.
+# Returns a new array
+
+
 def subtract_include(*args):
     inc = args[0].copy()
     for i, x in enumerate(inc):
@@ -97,64 +105,61 @@ def subtract_include(*args):
                 inc[i] = False
     return inc
 
-#Returns number of True values in an array
+# Returns number of True values in an array
+
+
 def get_true_count(inc):
     x = 0
     for z in inc:
-        if z == True:
+        if z:
             x = x + 1
     return x
-from mhw.utils import get_include_valid_entries as check
-#Any include arrays defined here need to be added to __all__ to be imported with *
+
+# Any include arrays defined here need to be added to __all__ to be imported with *
+
+
 include_all = [True]*all_respondents
 inc1 = get_include_array('SAL1', 'I am a PhD level graduate student within the Department of Physics and Astronomy.')
 inc2 = get_include_array('SAL1', 'I am a master level graduate student within the Department of Physics and Astronomy.')
-#Undergrads
+# Undergrads
 inc_under = get_include_array('SAL1', 'I am an undergraduate student.')
-
-#Female identifying
+# Female identifying
 inc_fem = get_include_array('PI3', 'Female (cis or trans)')
-#Male identifying
+# Male identifying
 inc_mal = get_include_array('PI3', 'Male (cis or trans)')
-#Person with a disability
+# Person with a disability
 inc_disa = get_include_array('PI2', "Yes")
-#Racialized person
+# Racialized person
 inc_race = get_include_array('PI1', "Yes")
-#Graduate students
+# Graduate students
 inc_grad = combine_include(inc1, inc2, logic='OR')
-
-#Employed but not on co-op
+# Employed but not on co-op
 inc_a = get_include_array("SAL9-0","Yes")
 inc_b = get_include_array("SAL9-1","Yes")
 inc_c = get_include_array("SAL9-2","Yes")
 inc_emp = combine_include(inc_a,inc_b,inc_c, logic='OR')
-#Employed as a TA or IA
+# Employed as a TA or IA
 inc_TA = get_include_array('SAL9-2', "Yes")
-#Unemployed and not on co-op
+# Unemployed and not on co-op
 inc_unem = subtract_include(get_include_array('SAL9-3', "Yes"), 
                             get_include_array('SAL6', "I am in a co-op work placement this semester.") )
-#Currently on co-op placement
+# Currently on co-op placement
 inc_coop = get_include_array('SAL6', "I am in a co-op work placement this semester.")
-#Employed but not as a TA
+# Employed but not as a TA
 inc_d = get_include_array("SAL9-0","Yes")
 inc_e = get_include_array("SAL9-1","Yes")
 inc_f = get_include_array('SAL6', "I am in a co-op work placement this semester.")
 inc_emp_notTA = combine_include(inc_d, inc_e, inc_f, logic='OR')
-
-#Crisis and struggling
+# Crisis and struggling
 inc_crisis = get_include_array('MH2', 'In crisis')
 inc_struggling = get_include_array('MH2', 'Struggling')
 inc_danger = combine_include(inc_crisis, inc_struggling, logic='OR')
-
-#Racialized graduates and undergradues
+# Racialized graduates and undergraduates
 inc_grad_race = combine_include(inc_grad, inc_race, logic='AND')
 inc_under_race = combine_include(inc_under, inc_race, logic='AND')
-
-
-#Undergraduates that are not racialized
+# Undergraduates that are not racialized
 inc_under_not_race = subtract_include(inc_under, inc_under_race)
-
-#Male and female undergraduates and graduate
+# Male and female undergraduates and graduate
 inc_under_fem = combine_include(inc_under, inc_fem, logic='AND')
 inc_grad_fem = combine_include(inc_grad, inc_fem, logic='AND')
 inc_under_mal = combine_include(inc_under, inc_mal, logic='AND')

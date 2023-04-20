@@ -23,9 +23,10 @@ from mhw.include_arrays import get_true_count
 import sys
 import os
 
-#Output_dict describes output directories by their relative path from the working directory
-#Each key maps to a path, an include array, and a file description
-#dict format  {key                   : [path,                         include,        description] }
+# Output_dict describes output directories by their relative path from the working directory
+# Each key maps to a path, an include array, and a file description
+# dict format  {key                   : [path,                         include,        description] }
+
 path = '\\results\\'
 output_dict = {'all'                    : [path+'all\\',                    include_all,    'all_respondents'],
                'coop_placement'         : [path+'coop_placement\\',         inc_coop,       'coop_placement'],
@@ -53,14 +54,14 @@ output_keys = output_dict.keys()
 top_working_dir = os.getcwd()
 for key in output_keys:
     include = output_dict[key][1]
-    #By default, include arrays are compared with their complement.
-    #Give a value to other_include to instead compare with an arbitrary array.
+    # By default, include arrays are compared with their complement.
+    # Give a value to other_include to instead compare with an arbitrary array.
     other_include = None        
     desc = output_dict[key][2]
     os.chdir(top_working_dir + output_dict[key][0])
         
-    #Print to system file. Comment this line to print to python console.       
-    #sys.stdout = open(desc+".txt", "w")
+    # Print to system file. Comment this line to print to python console.
+    # sys.stdout = open(desc+".txt", "w")
        
     valid_resp = get_true_count(include)
 

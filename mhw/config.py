@@ -9,8 +9,8 @@ from matplotlib import rc
 import pandas as pd
 
 #Read the results and stats files into a python pandas object
-results_file = pd.read_excel('../results/results-survey265235_2023.xls', header=None)
-statistics_file = pd.read_excel('../results/statistic-survey265235_2023.xls', header=None)
+results_file = pd.read_excel('./results/results-survey265235_2023.xls', header=None)
+statistics_file = pd.read_excel('./results/statistic-survey265235_2023.xls', header=None)
 
 #Variables used to read statistics file
 last_row = 1099

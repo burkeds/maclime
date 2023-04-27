@@ -6,33 +6,20 @@ Created on May 18, 2022
 This file holds functions for reading the limesurvey results file and extracting responses.
 
 """
-from mhw.config import all_respondents, results_file
-
-results_rows = results_file
-ls0 = results_rows.loc[0].values.tolist()
+from mhw.config import results_file
 
 
-# Returns array of responses for a question code
+# Returns list of responses for a question code
 def get_all_responses(code):
-    col_i = -1
-    responses = {}
-    for index, cell in enumerate(ls0):
-        if cell == code:
-            col_i = index
-    row = 2 
-    while row <= all_respondents:
-        ls = results_rows.loc[row].values.tolist()
-        responses[str(ls[0])] = ls[col_i]
-        row += 1
+    keys = results_file.index.tolist()
+    values = results_file[code].values.tolist()
+    responses = {keys[i]: values[i] for i in range(len(keys))}
     return responses
 
 
-# Fetched a single response from a respondent for a specific question code
 def get_single_response(code, resp_id):
-    resp_id = str(resp_id)
-    all_resp = get_all_responses(code)
-    response = all_resp[resp_id]
-    return response
+    response_id = int(resp_id)
+    return results_file.loc[response_id, code]
 
 
 # Returns only responses which have a corresponding True value in the include array

@@ -15,7 +15,6 @@ filter your data.
 """
 
 from mhw.read_results import get_all_responses
-from mhw.config import all_respondents
 
 __all__ = ['include_all',
            'inc_coop',
@@ -25,6 +24,8 @@ __all__ = ['include_all',
            'inc_emp_notTA',
            'inc_fem',
            'inc_mal',
+           'inc_phd',
+           'inc_master',
            'inc_grad',
            'inc_under',
            'inc_unem',
@@ -97,7 +98,7 @@ def get_true_count(inc):
 
 # Any include arrays defined here need to be added to __all__ to be imported with *
 # All respondents
-include_all = [True]*all_respondents
+include_all = get_include_array('C0', 'I understand and agree to participate in the study.')
 
 inc_phd = get_include_array('SAL1', 'I am a PhD level graduate student within the Department of Physics and Astronomy.')
 inc_master = get_include_array('SAL1', 'I am a master level graduate student within the Department of Physics and '
@@ -121,24 +122,24 @@ inc_disa = get_include_array('PI2', "Yes")
 inc_race = get_include_array('PI1', "Yes")
 
 # Employed but not on co-op
-inc_a = get_include_array("SAL9-0", "Yes")
-inc_b = get_include_array("SAL9-1", "Yes")
-inc_c = get_include_array("SAL9-2", "Yes")
+inc_a = get_include_array("SAL9(SQ001)", "Yes")
+inc_b = get_include_array("SAL9(SQ002)", "Yes")
+inc_c = get_include_array("SAL9(SQ003)", "Yes")
 inc_emp = combine_include(inc_a, inc_b, inc_c, logic='OR')
 
 # Employed as a TA or IA
-inc_TA = get_include_array('SAL9-2', "Yes")
+inc_TA = get_include_array('SAL9(SQ003)', "Yes")
 
 # Unemployed and not on co-op
-inc_unem = subtract_include(get_include_array('SAL9-3', "Yes"), 
+inc_unem = subtract_include(get_include_array('SAL9(SQ004)', "Yes"),
                             get_include_array('SAL6', "I am in a co-op work placement this semester."))
 
 # Currently on co-op placement
 inc_coop = get_include_array('SAL6', "I am in a co-op work placement this semester.")
 
 # Employed but not as a TA
-inc_d = get_include_array("SAL9-0", "Yes")
-inc_e = get_include_array("SAL9-1", "Yes")
+inc_d = get_include_array("SAL9(SQ001)", "Yes")
+inc_e = get_include_array("SAL9(SQ002)", "Yes")
 inc_f = get_include_array('SAL6', "I am in a co-op work placement this semester.")
 inc_emp_notTA = combine_include(inc_d, inc_e, inc_f, logic='OR')
 

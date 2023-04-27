@@ -9,16 +9,14 @@ These variables will change for any given survey.
 from matplotlib import rc
 import pandas as pd
 
-# Read the results and stats files into a python pandas object
-results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\results-survey265235_2023.xls", header=None)
-statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls", header=None)
-
-# Variables used to read statistics file
-last_row = 1010
-max_responses = 34
+# Read the results and stats files into a python pandas dataframe
+results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\results-survey265235_2023.xls",
+                             header=0, skiprows=[1], index_col=0)
+statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls",
+                                header=None)
 
 # Sample size. The number of all respondents in main file
-all_respondents = 34
+all_respondents = 33
 
 # zscore for 95% confidence interval
 zscore = 1.96

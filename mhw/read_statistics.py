@@ -7,20 +7,17 @@ This file will allow you to read from the limesurvey statistics output file.
 This version of the code requires the statistics file but these data could
 be obtained from the results file in future versions.
 """
-from mhw.config import last_row, statistics_file
+from mhw.config import statistics_file
 import pandas as pd
 from mhw.utils import char_split, merge
-
 
 data = statistics_file
 
 
-def generate_codex(data):
+def generate_codex(stats):
     code_dict = {}
-    index = -1
-    while index <= last_row:
-        index += 1
-        ls = data.loc[index].values.tolist()
+    for i in range(len(stats)):
+        ls = stats.loc[i].values.tolist()
         if isinstance(ls[0], str):
             ls = ls[0].split()
             if ls[0] == "Summary":
@@ -32,7 +29,7 @@ def generate_codex(data):
                     if char == ")":
                         break
                 code = code[0:ch]
-                code_dict[code] = index
+                code_dict[code] = i
     return code_dict
 
 

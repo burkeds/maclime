@@ -14,8 +14,8 @@ results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\resu
 statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls", header=None)
 
 # Variables used to read statistics file
-#last_row = 1010
-#max_responses = 34
+last_row = 1010
+max_responses = 34
 
 # Sample size. The number of all respondents in main file
 all_respondents = 34

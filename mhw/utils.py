@@ -115,11 +115,3 @@ def add(x, y):
         return None
     else:
         return x + y
-
-
-def get_include_valid_entries(inc):
-    i = 0
-    for x in inc:
-        if x:
-            i = i+1
-    return i

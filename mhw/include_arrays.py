@@ -16,8 +16,8 @@ Pass include arrays to functions called from your survey file and use them to
 filter your data.
 '''
 
-from mhw.read_results import ls0, results_rows
-from mhw.config import all_respondents, max_responses
+from mhw.read_results import ls0, results_rows, get_all_responses
+from mhw.config import all_respondents
 
 __all__ = ['include_all',
            'inc_coop',
@@ -42,26 +42,18 @@ __all__ = ['include_all',
            'get_true_count',
            'subtract_include']
 
+
 # Returns an include array of True/False values for a given code and response
-
-
-def get_include_array(code, inc):
-    col_i = -1
-    resps = [False]*all_respondents
-    for index, cell in enumerate(ls0):
-        if cell == code:
-            col_i = index
-    row = 2 
-    while row <= max_responses:
-        ls = results_rows.loc[row].values.tolist()
-        if ls[col_i] == inc:    
-            resps[row-2]=True
-        row += 1
-    return resps
+def get_include_array(code, response):
+    responses = get_all_responses(code)
+    include = dict.fromkeys(responses.keys(), None)
+    for key in responses.keys():
+        if responses[key] == response:
+            include[key] = True
+    return include
 
 # Use logic to combine include arrays. 'OR' is default logic.
 # Returns a new array
-
 
 def combine_include(*args, logic='OR'):
     logics = ['OR', 'AND']

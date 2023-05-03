@@ -11,7 +11,7 @@ from textwrap import wrap
 from mhw.config import zscore, pop, all_respondents
 from mhw.read_results import get_single_response, get_included_responses
 from mhw.scoring import get_value_dict, get_scored_data
-from mhw.utils import standard_error, fpc, get_confidence_interval, mean, mwu_test, get_include_valid_entries
+from mhw.utils import standard_error, fpc, get_confidence_interval, mean, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
 from mhw.figures import make_barplot, make_boxplot, make_histo
 from mhw.include_arrays import subtract_include
@@ -51,16 +51,16 @@ def impact_of_single_academics_on_mental_health(include, desc, other_include=Non
         include_comp = other_include
     # Build dict for set of question codes
     #    Dict = {CODE        : [subquestion, scores, mean, moe, lconf, median, hconf, pvalue, comp_scores]}
-    data_dict = {'AE6(SQ001)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ002)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ003)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ004)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ005)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ006)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ007)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ008)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ009)': [None, None, None, None, None, None, None, None, None],
-                 'AE6(SQ010)': [None, None, None, None, None, None, None, None, None]}
+    data_dict = {'AE6(SQ001)': [None]*9,
+                 'AE6(SQ002)': [None]*9,
+                 'AE6(SQ003)': [None]*9,
+                 'AE6(SQ004)': [None]*9,
+                 'AE6(SQ005)': [None]*9,
+                 'AE6(SQ006)': [None]*9,
+                 'AE6(SQ007)': [None]*9,
+                 'AE6(SQ008)': [None]*9,
+                 'AE6(SQ009)': [None]*9,
+                 'AE6(SQ010)': [None]*9}
     # Fill data_dict
     for code in data_dict.keys():
         resps = get_included_responses(code, include)

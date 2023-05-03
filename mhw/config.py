@@ -15,7 +15,7 @@ results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\resu
 statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls",
                                 header=None)
 
-# Sample size. The number of all respondents in main file
+# Sample size. The number of all respondents in results file
 all_respondents = 33
 
 # zscore for 95% confidence interval

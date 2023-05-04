@@ -9,14 +9,13 @@ extract and manipulate data however you want.
 import pandas as pd
 import numpy as np
 from textwrap import wrap
-from mhw.config import zscore, pop, all_respondents
-from mhw.read_results import get_single_response, get_included_responses
+from mhw.config import zscore, pop, all_respondents, results_file as results
+from mhw.read_results import get_included_responses
 from mhw.scoring import get_value_dict, get_scored_data
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
 from mhw.figures import make_barplot, make_boxplot, make_histo
-from mhw.include_arrays import subtract_include
-
+from mhw.include_arrays import include_all, subtract_include
 
 def get_academic_impact(resp_id):
     impact_codes = ['AE6(SQ001)',
@@ -29,89 +28,141 @@ def get_academic_impact(resp_id):
                     'AE6(SQ008)',
                     'AE6(SQ009)',
                     'AE6(SQ010)']
-    score = []
+    xs = results[impact_codes].xs(44)
+    responses = xs.to_dict()
+    scores = []
     for code in impact_codes:
         value = get_value_dict(code)
-        resp = get_single_response(code, resp_id)
-        if resp == 'keyerror':
-            return None
-        if not resp or resp == 'Not applicable':
-            continue
-        else:
-            score.append(value[resp])
-    if not score:
-        return None
+        response = responses[code]
+        score = value[response]
+        if not pd.isna(score):
+            scores.append(score)
     else:
-        score_mean = np.array(score).mean()
+        score_mean = np.array(scores).mean()
         return score_mean
 
 
-# Investigate effects of specific academic experiences
-def impact_of_single_academics_on_mental_health(include, desc, other_include=None):
-    # Build complementary array for pvalue calculations
-    include_comp = subtract_include([True]*all_respondents, include)
+def mean_impact_of_all_academics_on_health(include, desc, other_include=None):
+    include_comp = subtract_include(include_all, include)
     if other_include:
         include_comp = other_include
-    # Build dict for set of question codes
-    #    Dict = {CODE        : [subquestion, scores, mean, moe, lconf, median, hconf, pvalue, comp_scores]}
-    stats_dict = {'subquestion': None,
-                  'scores': None,
-                  'mean': None,
-                  'moe': None,
-                  'lconf': None,
-                  'median': None,
-                  'hconf': None,
-                  'pvalue': None,
-                  'comp_scores': None}
-    data_dict = {'AE6(SQ001)': stats_dict.copy(),
-                 'AE6(SQ002)': stats_dict.copy(),
-                 'AE6(SQ003)': stats_dict.copy(),
-                 'AE6(SQ004)': stats_dict.copy(),
-                 'AE6(SQ005)': stats_dict.copy(),
-                 'AE6(SQ006)': stats_dict.copy(),
-                 'AE6(SQ007)': stats_dict.copy(),
-                 'AE6(SQ008)': stats_dict.copy(),
-                 'AE6(SQ009)': stats_dict.copy(),
-                 'AE6(SQ010)': stats_dict.copy()}
-    # Fill data_dict
-    for code in data_dict.keys():
-        resps = get_included_responses(code, include)
-        comp_resps = get_included_responses(code, include_comp)
-        scores = get_scored_data(code, resps)
-        comp_scores = get_scored_data(code, comp_resps)
-        lconf, median, hconf = get_confidence_interval(scores)
-        data_dict[code][0] = get_subquestion(code)
-        data_dict[code][1] = scores
-        data_dict[code][2] = mean(scores)
-        try:
-            data_dict[code][3] = standard_error(scores) * zscore * fpc(pop, len(scores))
-        except TypeError:
-            data_dict[code][3] = None
-        data_dict[code][4] = lconf
-        data_dict[code][5] = median
-        data_dict[code][6] = hconf
-        data_dict[code][7] = mwu_test(scores, comp_scores)
-        data_dict[code][8] = comp_scores
-    # Print data
+    codes = ['AE6(SQ001)',
+             'AE6(SQ002)',
+             'AE6(SQ003)',
+             'AE6(SQ004)',
+             'AE6(SQ005)',
+             'AE6(SQ006)',
+             'AE6(SQ007)',
+             'AE6(SQ008)',
+             'AE6(SQ009)',
+             'AE6(SQ010)']
+    stats = ['subquestion',
+             'mean',
+             'moe',
+             'lconf',
+             'median',
+             'hconf',
+             'comp_scores',
+             'comp_mean',
+             'comp_moe',
+             'comp_lconf',
+             'comp_median',
+             'comp_hconf',
+             'pvalue']
+
+    impact_stats = pd.DataFrame(index=codes, columns=stats)
+
+    for code in impact_stats.index.tolist():
+        impact_stats.loc[code, 'subquestion'] = get_subquestion(code)
+
+        responses = get_included_responses(code, include)
+        scores = np.array(get_scored_data(code, responses))
+        scores = [i for i in scores if not pd.isna(i)]
+        scores_inc = scores.copy()
+        if scores:
+            impact_stats.loc[code, 'mean'] = float(np.mean(scores))
+            impact_stats.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+            lconf, median, hconf = get_confidence_interval(scores)
+            impact_stats.loc[code, 'lconf'] = float(lconf)
+            impact_stats.loc[code, 'median'] = float(median)
+            impact_stats.loc[code, 'hconf'] = float(hconf)
+        else:
+            impact_stats.loc[code, 'mean'] = None
+            impact_stats.loc[code, 'moe'] = None
+            impact_stats.loc[code, 'lconf'] = None
+            impact_stats.loc[code, 'median'] = None
+            impact_stats.loc[code, 'hconf'] = None
+
+        responses = get_included_responses(code, include_comp)
+        scores = np.array(get_scored_data(code, responses))
+        scores = [i for i in scores if not pd.isna(i)]
+        scores_comp = scores.copy()
+        if len(scores) > 1:
+            impact_stats.loc[code, 'mean'] = float(np.mean(scores))
+            impact_stats.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+            lconf, median, hconf = get_confidence_interval(scores)
+            impact_stats.loc[code, 'lconf'] = float(lconf)
+            impact_stats.loc[code, 'median'] = float(median)
+            impact_stats.loc[code, 'hconf'] = float(hconf)
+        else:
+            impact_stats.loc[code, 'mean'] = None
+            impact_stats.loc[code, 'moe'] = None
+            impact_stats.loc[code, 'lconf'] = None
+            impact_stats.loc[code, 'median'] = None
+            impact_stats.loc[code, 'hconf'] = None
+
+        impact_stats.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
+
+    impact_stats = impact_stats.replace(pd.NA, np.nan)
     print("********************************************************************")
     print("Calculate the impact score of specific academic experiences on mental health")
     print("with respect to the mental health continuum.")
     print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
-    print("Top question:\t", get_top_question('AE6(SQ001)'))
-    print("Question code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tP-value")
-    for code in data_dict.keys():
-        print(code, end="\t")
-        print(data_dict[code][0], end="\t")
-        i = 2
-        while i < 8:
-            try:
-                print(round(data_dict[code][i], 2), end="\t")
-            except TypeError:
-                print(None, end="\t")
-            finally:
-                i = i+1
-        print("\n", end="")
+    print("Top question:\t,", get_top_question('AE6(SQ001)'))
+    print(impact_stats.round(2).to_csv(sep='\t'))
     print("********************************************************************")
+
+    # Call make_barplot to build figures
+    xlabels = ["classwork",
+               "labwork",
+               "testing",
+               "research/thesis",
+               "co-op",
+               "TAs",
+               "faculty/admin",
+               "non-P&A",
+               "students",
+               "not academic"]
+    xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
+    ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
+    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
+    plot_dict = {}
+    comp_plot_dict = {}
+    included_respondents = len(include)
+    included_respondents_comp = len(include_comp)
+    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
+    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
+    for i, code in enumerate(codes):
+        plot_dict[xlabels[i]] = impact_stats['mean'][code]
+        comp_plot_dict[xlabels[i]] = impact_stats['comp_mean'][code]
+
+    make_barplot("Impact_on_mental_health_continuum", desc + res_str, True, -2, 2, plot_dict, ylabels, True)
+    make_barplot("Impact_on_mental_health_continuum", "(comp)" + desc + res_str_comp, True, -2, 2, comp_plot_dict,
+                 ylabels,
+                 True)
+    make_barplot("Impact_on_mental_health_continuum", desc, True, -2, 2, plot_dict, ylabels, True, xlabels=['Q1', 'Q2',
+                                                                                                            'Q3', 'Q4',
+                                                                                                            'Q5', 'Q6',
+                                                                                                            'Q7', 'Q8',
+                                                                                                            'Q9',
+                                                                                                            'Q10'])
+    make_barplot("Impact_on_mental_health_continuum", "not_" + desc, True, -2, 2, comp_plot_dict, ylabels, True,
+                 xlabels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'])
+    return impact_stats
+
+"""
+    # Print data
+
     # Call make_barplot to build figures
     xlabels = ["classwork",
                "labwork",
@@ -146,53 +197,7 @@ def impact_of_single_academics_on_mental_health(include, desc, other_include=Non
                                                                                                             'Q10'])
     make_barplot("Impact_on_mental_health_continuum", "not_" + desc, True, -2, 2, comp_plot_dict, ylabels, True,
                  xlabels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'])
-
-
-def mean_impact_of_all_academics_on_health(include, desc, other_include=None):
-    include_comp = subtract_include([True]*len(include), include)
-    if other_include:
-        include_comp = other_include
-    academic_impacts = [get_academic_impact(i) if var else None for i, var in enumerate(include)]
-    academic_impacts = [i for i in academic_impacts if not pd.isna(i)]
-    comp_academic_impacts = [get_academic_impact(i) if var else None for i, var in enumerate(include_comp)]
-    comp_academic_impacts = [i for i in comp_academic_impacts if not pd.isna(i)]
-    lconf, median, hconf = get_confidence_interval(academic_impacts)
-    pval = mwu_test(academic_impacts, comp_academic_impacts)
-    try:
-        se = standard_error(academic_impacts) * zscore * fpc(pop, len(academic_impacts))
-    except TypeError:
-        se = None
-    print_list = [mean(academic_impacts),
-                  se,
-                  lconf,
-                  median,
-                  hconf,
-                  pval]
-    print("********************************************************************")
-    print("Calculate the mean impact of all academics on mental health")
-    print("with respect to the mental health continuum.")
-    print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive)")
-    print("mean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
-    if not academic_impacts:
-        print("No valid responses.")
-        return None
-    for num in print_list:
-        try:
-            print(round(num, 2), end="\t")
-        except TypeError:
-            print(None, end="\t")
-    print("\n")
-    print("********************************************************************")
-    included_respondents = get_include_valid_entries(include)
-    included_respondents_comp = get_include_valid_entries(include_comp)
-    res_str = "("+str(included_respondents)+" of "+str(all_respondents)+")"
-    res_str_comp = "("+str(included_respondents_comp)+" of "+str(all_respondents)+")"
-    make_boxplot("Academic_impact_score_on_mental_health_continuum"+res_str, desc, True, -2, +2, ["impact score"],
-                 [academic_impacts])
-    make_boxplot("Academic_impact_score_on_mental_health_continuum"+res_str_comp, "(comp)"+desc, True, -2, +2,
-                 ["impact score"], [comp_academic_impacts])
-
-
+"""
 def ae0_and_ae1(include, desc, other_include=None):
     include_comp = subtract_include([True] * all_respondents, include)
     if other_include:

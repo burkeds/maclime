@@ -93,6 +93,7 @@ def fpc(N, n):
 
 # Perform MannWhitneyU test for two datasets and return pvalue
 def mwu_test(data, comp):
+    print(data, comp)
     data = [i for i in data if not pd.isna(i)]
     if not data:
         return None

@@ -3,8 +3,6 @@ Created on May 18, 2022
 
 @author: Devin Burke
 """
-import pandas as pd
-
 
 # Store dictionaries that map responses to arbitrary
 # numerical values valid for a list of questions.
@@ -104,13 +102,10 @@ def get_value_dict(code):
 
 
 # An array of responses passed returns an array of scored values using value_dict
-def get_scored_data(code, data):
-    data = [None if pd.isna(i) else i for i in data]
-    value = get_value_dict(code)
-    scores = [None]*len(data)
-    for i, resp in enumerate(data):
-        try:
-            scores[i] = value[resp]
-        except KeyError:
-            scores[i] = None
+def get_scored_data(code, responses):
+    value_dict = get_value_dict(code)
+    scores = []
+    for response in responses:
+        if response in value_dict.keys():
+            scores.append(value_dict[response])
     return scores

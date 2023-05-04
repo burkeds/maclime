@@ -14,7 +14,8 @@ Pass include arrays to functions called from your survey file and use them to
 filter your data.
 """
 
-from mhw.read_results import get_all_responses
+from mhw.config import results_file as results
+from collections import Counter
 
 __all__ = ['include_all',
            'inc_coop',
@@ -38,37 +39,26 @@ __all__ = ['include_all',
            'inc_under_mal',
            'inc_grad_fem',
            'inc_grad_mal',
-           'get_true_count',
            'subtract_include']
 
 
-# Returns an include array of True/False values for a given code and response
+# Returns a list of index values (respondent IDs) that have the response to the code.
 def get_include_array(code, response):
-    responses = get_all_responses(code)
-    include = dict.fromkeys(responses.keys(), False)
-    for key in responses.keys():
-        if responses[key] == response:
-            include[key] = True
-    return include
+    f_results = results[results[code] == response]
+    return f_results.index.tolist()
 
 
-# Use logic to combine include arrays. 'OR' is default logic.
-# Returns a new array
+# Can combine lists using AND or OR logic.
 def combine_include(*args, logic='OR'):
-    logics = ['OR', 'AND']
-    new_include = dict.fromkeys(args[0].keys(), None)
-    if logic not in logics:
-        raise Exception('Combine logic must be one of ', logics)
-    for include in args:
-        if len(include) != len(args[0]):
-            raise Exception('All arrays must be of the same length.')
-    for key in new_include.keys():
-        entries = [include[key] for include in args]
-        if logic == 'AND':
-            new_include[key] = all(entries)
-        if logic == 'OR':
-            new_include[key] = any(entries)
-    return new_include
+    x = args[0].copy()
+    for i, inc in enumerate(args):
+        if i == 0:
+            continue
+        x = x + inc
+    if logic == 'OR':
+        return list(dict.fromkeys(x))
+    if logic == 'AND':
+        return [item for item, count in Counter(x).items() if count > 1]
 
 # All respondent arrays after the first are subtracted from the first.
 # For each boolean in the first array, if any boolean of the same index in
@@ -78,22 +68,11 @@ def combine_include(*args, logic='OR'):
 
 def subtract_include(*args):
     new_include = args[0].copy()
-    for key in new_include.keys():
-        entries = [include[key] for include in args]
-        if entries[0]:
-            for x in entries[1:]:
-                if x:
-                    new_include[key] = False
+    for i, inc in enumerate(args):
+        if i == 0:
+            continue
+        new_include = [x for x in new_include if x not in inc]
     return new_include
-
-
-# Returns number of True values in an include array
-def get_true_count(inc):
-    x = 0
-    for z in inc.values():
-        if z:
-            x = x + 1
-    return x
 
 
 # Any include arrays defined here need to be added to __all__ to be imported with *

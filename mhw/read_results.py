@@ -20,11 +20,15 @@ def get_all_responses(code):
 
 def get_single_response(code, resp_id):
     response_id = int(resp_id)
-    response = results_file.loc[response_id, code]
-    if pd.isna(response):
-        return None
-    else:
-        return results_file.loc[response_id, code]
+    try:
+        response = results_file.loc[response_id, code]
+        if pd.isna(response):
+            return None
+        else:
+            return response
+    except KeyError as e:
+        print("The key", e,"is not found within the results file.")
+        return 'keyerror'
 
 
 # Returns only responses which have a corresponding True value in the include array

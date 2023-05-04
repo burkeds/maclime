@@ -7,11 +7,12 @@ This file is where you should write survey specific functions to
 extract and manipulate data however you want.
 """
 import pandas as pd
+import numpy as np
 from textwrap import wrap
 from mhw.config import zscore, pop, all_respondents
 from mhw.read_results import get_single_response, get_included_responses
 from mhw.scoring import get_value_dict, get_scored_data
-from mhw.utils import standard_error, fpc, get_confidence_interval, mean, mwu_test
+from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
 from mhw.figures import make_barplot, make_boxplot, make_histo
 from mhw.include_arrays import subtract_include
@@ -32,14 +33,16 @@ def get_academic_impact(resp_id):
     for code in impact_codes:
         value = get_value_dict(code)
         resp = get_single_response(code, resp_id)
-        if pd.isna(resp) or resp == 'Not applicable':
+        if resp == 'keyerror':
+            return None
+        if not resp or resp == 'Not applicable':
             continue
         else:
             score.append(value[resp])
     if not score:
         return None
     else:
-        score_mean = mean(score)
+        score_mean = np.array(score).mean()
         return score_mean
 
 
@@ -51,16 +54,25 @@ def impact_of_single_academics_on_mental_health(include, desc, other_include=Non
         include_comp = other_include
     # Build dict for set of question codes
     #    Dict = {CODE        : [subquestion, scores, mean, moe, lconf, median, hconf, pvalue, comp_scores]}
-    data_dict = {'AE6(SQ001)': [None]*9,
-                 'AE6(SQ002)': [None]*9,
-                 'AE6(SQ003)': [None]*9,
-                 'AE6(SQ004)': [None]*9,
-                 'AE6(SQ005)': [None]*9,
-                 'AE6(SQ006)': [None]*9,
-                 'AE6(SQ007)': [None]*9,
-                 'AE6(SQ008)': [None]*9,
-                 'AE6(SQ009)': [None]*9,
-                 'AE6(SQ010)': [None]*9}
+    stats_dict = {'subquestion': None,
+                  'scores': None,
+                  'mean': None,
+                  'moe': None,
+                  'lconf': None,
+                  'median': None,
+                  'hconf': None,
+                  'pvalue': None,
+                  'comp_scores': None}
+    data_dict = {'AE6(SQ001)': stats_dict.copy(),
+                 'AE6(SQ002)': stats_dict.copy(),
+                 'AE6(SQ003)': stats_dict.copy(),
+                 'AE6(SQ004)': stats_dict.copy(),
+                 'AE6(SQ005)': stats_dict.copy(),
+                 'AE6(SQ006)': stats_dict.copy(),
+                 'AE6(SQ007)': stats_dict.copy(),
+                 'AE6(SQ008)': stats_dict.copy(),
+                 'AE6(SQ009)': stats_dict.copy(),
+                 'AE6(SQ010)': stats_dict.copy()}
     # Fill data_dict
     for code in data_dict.keys():
         resps = get_included_responses(code, include)

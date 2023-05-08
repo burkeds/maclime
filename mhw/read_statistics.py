@@ -122,3 +122,29 @@ def get_data(code):
         perc[index] = round(dat*100, 1)        
     qdata = perc
     return qdata
+
+
+class Question:
+    code = ""
+    summary = ""
+    question = ""
+    subquestion = ""
+    question_headers = ""
+    possible_answers = ""
+    counts = []
+    stats = []
+    error = ""
+
+    def __init__(self, code):
+        try:
+            _ = codex[code]
+            self.code = code
+        except KeyError as e:
+            self.error = "KeyError: {}".format(e)
+        self.summary = get_summary(code)
+        self.question = get_top_question(code)
+        self.subquestion = get_subquestion(code)
+        self.question_headers = get_question_headers(code)
+        self.possible_answers = get_possible_answers(code)
+        self.counts = get_counts(code)
+        self.stats = get_data(code)

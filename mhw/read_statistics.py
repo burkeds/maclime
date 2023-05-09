@@ -141,13 +141,34 @@ class Question:
             self.code = code
         except KeyError as e:
             self.error = "KeyError: {}".format(e)
-        self.summary = get_summary(code)
-        self.question = get_top_question(code)
-        self.subquestion = get_subquestion(code)
-        self.question_headers = get_question_headers(code)
-        self.possible_answers = get_possible_answers(code)
-        self.counts = get_counts(code)
-        self.stats = get_data(code)
+        try:
+            self.summary = get_summary(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.question = get_top_question(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.subquestion = get_subquestion(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.question_headers = get_question_headers(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.possible_answers = get_possible_answers(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.counts = get_counts(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.stats = get_data(code)
+        except Exception as e:
+            self.error = e
 
 
 def get_all_statistics():

@@ -148,3 +148,11 @@ class Question:
         self.possible_answers = get_possible_answers(code)
         self.counts = get_counts(code)
         self.stats = get_data(code)
+
+
+def get_all_statistics():
+    all_stats = {}
+    all_codes = list(codex.keys())
+    for code in all_codes:
+        all_stats[code] = Question(code)
+    return all_stats

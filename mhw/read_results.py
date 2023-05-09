@@ -30,3 +30,7 @@ def get_single_response(code, resp_id):
 # Returns only responses which have a corresponding True value in the include array
 def get_included_responses(code, include):
     return results[code][include].to_list()
+
+
+def get_results():
+    return results

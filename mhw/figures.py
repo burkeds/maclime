@@ -15,44 +15,7 @@ import math
 from mhw.utils import get_confidence_interval, standard_error, fpc, func, mean
 from mhw.config import pop, zscore
 from mhw.read_statistics import get_possible_answers
-
-
-def make_boxplot(title, desc, flag, lowy, highy, xlabels, series):
-    plt.clf()
-    xlabels = list(xlabels)
-    hconf = []
-    lconf = []
-    if len(xlabels) != len(series):
-        print("The length of xlabels must be the same as the number of data series.")
-        return None
-    for i, data in enumerate(series):
-        data = [i for i in data if not pd.isna(i)]
-        xlabels[i] = xlabels[i] + "\n" + str(len(data))
-        low, _, high = get_confidence_interval(data)
-        hconf.append(high)
-        lconf.append(low)  
-    conf = np.column_stack((hconf,lconf))
-    if len(series) == 1:
-        if not series[0]:
-            return
-    for i, data in enumerate(series):
-        if not data:
-            if i == len(series)-1:
-                return
-            continue
-    _, ax1 = plt.subplots()
-    ax1.set_title(title + "\n" + desc)
-    ax1.boxplot(series, notch=True, conf_intervals=conf, showfliers=True, zorder=3)
-    ax1.tick_params(direction='in')
-    ticks = list(range(1,len(series)+1))
-    ax1.set_xticks(ticks)
-    ax1.set_xticklabels(xlabels)
-    ax1.grid(axis='y', zorder=0)
-    if flag:
-        ax1.set_ylim([lowy, highy])
-    plt.savefig(title + "_" + desc + ".png")
-    plt.close()
-
+from mhw.scoring import get_value_dict
 
 def make_histo(data, title, desc):
     plt.clf()
@@ -74,6 +37,42 @@ def make_histo(data, title, desc):
     plt.savefig(title + "_" + desc + ".png")
     #plt.show()
     plt.close()
+
+
+def plot_impact_statistics(impact_statistics, complement=False, title="", description="", x_labels=None, y_labels=None):
+    plt.clf()
+    df = impact_statistics
+    code = df.index[0]
+    res_str = "(" + str(df.attrs['included_respondents']) + " of " + str(df.attrs['sample_size']) + ")"
+    description = df.attrs['description'] + res_str
+    # Generate labels if not specified
+    if not x_labels:
+        x_labels = df.index.tolist()
+    if not y_labels:
+        y_labels = get_possible_answers(code)
+        bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+        y_labels = [label for label in y_labels if label not in bad_labels]
+        y_labels = ['\n'.join(wrap(l, 10)) for l in y_labels]
+
+    # Get bar colours from colourmap
+    cmap = matplotlib.colormaps['RdYlGn']
+    colours = []
+    low_y = min(list(get_value_dict(code).values()))
+    high_y = max(list(get_value_dict(code).values()))
+    for val in df['mean'].values.tolist():
+        cval = math.fabs(low_y - val)
+        cval = cval / (high_y - low_y)
+        colours.append(matplotlib.colors.to_hex(cmap(cval)))
+
+    # Create plot axis
+    title = title + "\n" + description
+    ax = df['mean'].plot.bar(color=colours, title=title)
+    ax.set_yticks(range(low_y, high_y + 1))
+    ax.set_yticklabels(y_labels)
+    ax.set_xticklabels(x_labels, rotation=45, fontsize=5)
+    ax.set_ylim([low_y, high_y])
+    ax.tick_params(direction='in')
+    plt.show()
 
 
 def make_barplot(title, desc, flag, lowy, highy, data_dict, ylabels, minorgridflag = False, xlabels = None):

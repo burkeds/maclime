@@ -9,15 +9,19 @@ extract and manipulate data however you want.
 import pandas as pd
 import numpy as np
 from textwrap import wrap
-from mhw.config import zscore, pop, all_respondents, results_file as results
-from mhw.read_results import get_included_responses
+from mhw.config import zscore, pop, all_respondents
+from mhw.read_results import get_included_responses, get_results
 from mhw.scoring import get_value_dict, get_scored_data
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
-from mhw.figures import make_barplot, make_boxplot, make_histo
+from mhw.figures import make_barplot, make_histo
 from mhw.include_arrays import include_all, subtract_include
 
+results = get_results()
+
+
 def get_academic_impact(resp_id):
+    resp_id = int(resp_id)
     impact_codes = ['AE6(SQ001)',
                     'AE6(SQ002)',
                     'AE6(SQ003)',
@@ -28,7 +32,7 @@ def get_academic_impact(resp_id):
                     'AE6(SQ008)',
                     'AE6(SQ009)',
                     'AE6(SQ010)']
-    xs = results[impact_codes].xs(44)
+    xs = results[impact_codes].xs(resp_id)
     responses = xs.to_dict()
     scores = []
     for code in impact_codes:
@@ -42,10 +46,10 @@ def get_academic_impact(resp_id):
         return score_mean
 
 
-def mean_impact_of_all_academics_on_health(include, desc, other_include=None):
-    include_comp = subtract_include(include_all, include)
-    if other_include:
-        include_comp = other_include
+def get_impact_stats_comparison(include, include_other=None, description="", print_table=False):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, include)
     codes = ['AE6(SQ001)',
              'AE6(SQ002)',
              'AE6(SQ003)',
@@ -69,9 +73,14 @@ def mean_impact_of_all_academics_on_health(include, desc, other_include=None):
              'comp_median',
              'comp_hconf',
              'pvalue']
-
     impact_stats = pd.DataFrame(index=codes, columns=stats)
-
+    impact_stats.attrs['include'] = include
+    impact_stats.attrs['include_comp'] = include_comp
+    impact_stats.attrs['description'] = description
+    impact_stats.attrs['sample_size'] = all_respondents
+    impact_stats.attrs['population_size'] = pop
+    impact_stats.attrs['included_respondents'] = len(include)
+    impact_stats.attrs['complementary_respondents'] = len(include_comp)
     for code in impact_stats.index.tolist():
         impact_stats.loc[code, 'subquestion'] = get_subquestion(code)
 
@@ -114,14 +123,60 @@ def mean_impact_of_all_academics_on_health(include, desc, other_include=None):
         impact_stats.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
 
     impact_stats = impact_stats.replace(pd.NA, np.nan)
-    print("********************************************************************")
-    print("Calculate the impact score of specific academic experiences on mental health")
-    print("with respect to the mental health continuum.")
-    print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
-    print("Top question:\t,", get_top_question('AE6(SQ001)'))
-    print(impact_stats.round(2).to_csv(sep='\t'))
-    print("********************************************************************")
 
+    if print_table:
+        print("********************************************************************")
+        print("Calculate the impact score of specific academic experiences on mental health")
+        print("with respect to the mental health continuum.")
+        print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
+        print("Top question:\t,", get_top_question('AE6(SQ001)'))
+        print(impact_stats.round(2).to_csv(sep='\t'))
+        print("********************************************************************")
+
+    return impact_stats
+
+if __name__ == "__main__":
+    from mhw.include_arrays import *
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import math
+    from mhw.scoring import get_value_dict
+    from mhw.read_statistics import get_possible_answers
+
+
+    include = inc_under
+    include_comp = subtract_include(include_all, inc_under)
+    desc = "Undergraduates"
+    impact_stats = get_impact_stats_comparison(include=inc_under, description=desc, include_other=include_comp)
+
+    title = "Academic Impact on MHW"
+
+    xlabels = ["classwork",
+               "labwork",
+               "testing",
+               "research/thesis",
+               "co-op",
+               "TAs",
+               "faculty/admin",
+               "non-P&A",
+               "students",
+               "not academic"]
+    xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
+    ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
+    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
+    from mhw.figures import plot_impact_statistics
+    plot_impact_statistics(impact_stats,
+                           complement=False,
+                           title=title,
+                           description=desc,
+                           x_labels=xlabels,
+                           y_labels=ylabels)
+
+
+
+
+
+def impact_of_academics_plot(impact_stats):
     # Call make_barplot to build figures
     xlabels = ["classwork",
                "labwork",

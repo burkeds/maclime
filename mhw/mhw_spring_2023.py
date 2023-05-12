@@ -69,8 +69,8 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
     frames = []
     for codes in args:
         frames.append(pd.DataFrame(index=codes, columns=stats))
-
-    for df in frames:
+    for i in range(len(frames)):
+        df = frames[i]
         df.attrs['include'] = include
         df.attrs['include_comp'] = include_comp
         df.attrs['description'] = description
@@ -121,9 +121,7 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
                 df.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
             else:
                 df.loc[code, 'pvalue'] = None
-
-        df = df.replace(pd.NA, np.nan)
-
+        frames[i] = df.replace(pd.NA, np.nan)
         if print_table:
             print("********************************************************************")
             print("Calculate the impact score of specific academic experiences on mental health")
@@ -132,7 +130,6 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
             print("Top question:\t,", get_top_question(df.index[0]))
             print(df.round(2).to_csv(sep='\t'))
             print("********************************************************************")
-
     if len(frames) == 1:
         return frames[0]
     else:
@@ -231,11 +228,6 @@ def mh2(include, desc, other_include=None, print_table=False):
     res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
     make_histo(scores, "Mental_health_continuum" + res_str, desc)
     make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
-
-
-if __name__ == "__main__":
-    ae6(include=inc_under, description="Undergraduates")
-
 
 # OLD
 

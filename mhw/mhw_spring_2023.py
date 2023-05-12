@@ -14,8 +14,12 @@ from mhw.read_results import get_included_responses, get_results
 from mhw.scoring import get_value_dict, get_scored_data
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
-from mhw.figures import make_barplot, make_histo
+from mhw.figures import make_histo
 from mhw.include_arrays import include_all, subtract_include
+from mhw.figures import plot_impact_statistics
+from mhw.include_arrays import inc_under
+from mhw.scoring import get_value_dict
+from mhw.read_statistics import get_possible_answers
 
 results = get_results()
 
@@ -46,7 +50,7 @@ def get_academic_impact(resp_id):
         return score_mean
 
 
-def get_impact_stats_comparison(include, include_other=None, description="", print_table=False):
+def _get_impact_stats_comparison(include, include_other=None, description="", print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -66,7 +70,6 @@ def get_impact_stats_comparison(include, include_other=None, description="", pri
              'lconf',
              'median',
              'hconf',
-             'comp_scores',
              'comp_mean',
              'comp_moe',
              'comp_lconf',
@@ -88,6 +91,7 @@ def get_impact_stats_comparison(include, include_other=None, description="", pri
         scores = np.array(get_scored_data(code, responses))
         scores = [i for i in scores if not pd.isna(i)]
         scores_inc = scores.copy()
+
         if scores:
             impact_stats.loc[code, 'mean'] = float(np.mean(scores))
             impact_stats.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
@@ -107,20 +111,22 @@ def get_impact_stats_comparison(include, include_other=None, description="", pri
         scores = [i for i in scores if not pd.isna(i)]
         scores_comp = scores.copy()
         if len(scores) > 1:
-            impact_stats.loc[code, 'mean'] = float(np.mean(scores))
-            impact_stats.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+            impact_stats.loc[code, 'comp_mean'] = float(np.mean(scores))
+            impact_stats.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
             lconf, median, hconf = get_confidence_interval(scores)
-            impact_stats.loc[code, 'lconf'] = float(lconf)
-            impact_stats.loc[code, 'median'] = float(median)
-            impact_stats.loc[code, 'hconf'] = float(hconf)
+            impact_stats.loc[code, 'comp_lconf'] = float(lconf)
+            impact_stats.loc[code, 'comp_median'] = float(median)
+            impact_stats.loc[code, 'comp_hconf'] = float(hconf)
         else:
-            impact_stats.loc[code, 'mean'] = None
-            impact_stats.loc[code, 'moe'] = None
-            impact_stats.loc[code, 'lconf'] = None
-            impact_stats.loc[code, 'median'] = None
-            impact_stats.loc[code, 'hconf'] = None
-
-        impact_stats.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
+            impact_stats.loc[code, 'comp_mean'] = None
+            impact_stats.loc[code, 'comp_moe'] = None
+            impact_stats.loc[code, 'comp_lconf'] = None
+            impact_stats.loc[code, 'comp_median'] = None
+            impact_stats.loc[code, 'comp_hconf'] = None
+        if scores_inc and scores_comp:
+            impact_stats.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
+        else:
+            impact_stats.loc[code, 'pvalue'] = None
 
     impact_stats = impact_stats.replace(pd.NA, np.nan)
 
@@ -135,22 +141,13 @@ def get_impact_stats_comparison(include, include_other=None, description="", pri
 
     return impact_stats
 
-if __name__ == "__main__":
-    from mhw.include_arrays import *
-    import matplotlib
-    import matplotlib.pyplot as plt
-    import math
-    from mhw.scoring import get_value_dict
-    from mhw.read_statistics import get_possible_answers
 
-
-    include = inc_under
+def ae6(include, description):
     include_comp = subtract_include(include_all, inc_under)
-    desc = "Undergraduates"
-    impact_stats = get_impact_stats_comparison(include=inc_under, description=desc, include_other=include_comp)
-
-    title = "Academic Impact on MHW"
-
+    impact_stats = _get_impact_stats_comparison(include=include,
+                                               description=description,
+                                               include_other=include_comp)
+    title = "Impact of academics on wellness"
     xlabels = ["classwork",
                "labwork",
                "testing",
@@ -164,95 +161,18 @@ if __name__ == "__main__":
     xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
     ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
     ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    from mhw.figures import plot_impact_statistics
     plot_impact_statistics(impact_stats,
                            complement=False,
                            title=title,
-                           description=desc,
+                           x_labels=xlabels,
+                           y_labels=ylabels)
+    plot_impact_statistics(impact_stats,
+                           complement=True,
+                           title=title,
                            x_labels=xlabels,
                            y_labels=ylabels)
 
 
-
-
-
-def impact_of_academics_plot(impact_stats):
-    # Call make_barplot to build figures
-    xlabels = ["classwork",
-               "labwork",
-               "testing",
-               "research/thesis",
-               "co-op",
-               "TAs",
-               "faculty/admin",
-               "non-P&A",
-               "students",
-               "not academic"]
-    xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
-    ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    plot_dict = {}
-    comp_plot_dict = {}
-    included_respondents = len(include)
-    included_respondents_comp = len(include_comp)
-    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
-    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
-    for i, code in enumerate(codes):
-        plot_dict[xlabels[i]] = impact_stats['mean'][code]
-        comp_plot_dict[xlabels[i]] = impact_stats['comp_mean'][code]
-
-    make_barplot("Impact_on_mental_health_continuum", desc + res_str, True, -2, 2, plot_dict, ylabels, True)
-    make_barplot("Impact_on_mental_health_continuum", "(comp)" + desc + res_str_comp, True, -2, 2, comp_plot_dict,
-                 ylabels,
-                 True)
-    make_barplot("Impact_on_mental_health_continuum", desc, True, -2, 2, plot_dict, ylabels, True, xlabels=['Q1', 'Q2',
-                                                                                                            'Q3', 'Q4',
-                                                                                                            'Q5', 'Q6',
-                                                                                                            'Q7', 'Q8',
-                                                                                                            'Q9',
-                                                                                                            'Q10'])
-    make_barplot("Impact_on_mental_health_continuum", "not_" + desc, True, -2, 2, comp_plot_dict, ylabels, True,
-                 xlabels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'])
-    return impact_stats
-
-"""
-    # Print data
-
-    # Call make_barplot to build figures
-    xlabels = ["classwork",
-               "labwork",
-               "testing",
-               "research/thesis",
-               "co-op",
-               "TAs",
-               "faculty/admin",
-               "non-P&A",
-               "students",
-               "not academic"]
-    xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
-    ylabels = ["strongly negative", "negative",  "neutral",  "positive",  "strongly positive"]
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    plot_dict = {}
-    comp_plot_dict = {}
-    included_respondents = get_include_valid_entries(include)
-    included_respondents_comp = get_include_valid_entries(include_comp)
-    res_str = "("+str(included_respondents)+" of "+str(all_respondents)+")"
-    res_str_comp = "("+str(included_respondents_comp)+" of "+str(all_respondents)+")"
-    for i, code in enumerate(data_dict.keys()):
-        plot_dict[xlabels[i]] = data_dict[code][1]
-        comp_plot_dict[xlabels[i]] = data_dict[code][-1]
-    make_barplot("Impact_on_mental_health_continuum", desc+res_str, True, -2, 2, plot_dict, ylabels, True)
-    make_barplot("Impact_on_mental_health_continuum", "(comp)"+desc+res_str_comp, True, -2, 2, comp_plot_dict, ylabels,
-                 True)
-    make_barplot("Impact_on_mental_health_continuum", desc, True, -2, 2, plot_dict, ylabels, True, xlabels=['Q1', 'Q2',
-                                                                                                            'Q3', 'Q4',
-                                                                                                            'Q5', 'Q6',
-                                                                                                            'Q7', 'Q8',
-                                                                                                            'Q9',
-                                                                                                            'Q10'])
-    make_barplot("Impact_on_mental_health_continuum", "not_" + desc, True, -2, 2, comp_plot_dict, ylabels, True,
-                 xlabels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'])
-"""
 def ae0_and_ae1(include, desc, other_include=None):
     include_comp = subtract_include([True] * all_respondents, include)
     if other_include:
@@ -857,13 +777,3 @@ def mental_health_continuum_stats(include, desc, other_include=None):
     res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
     make_histo(scores, "Mental_health_continuum" + res_str, desc)
     make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
-
-
-# Perform MannWhitneyU test between any two include arrays for a specific question code
-def mwu_test_arbitrary(inc1, inc2, code):
-    responses1 = get_included_responses(code, inc1)
-    responses2 = get_included_responses(code, inc2,)
-    values1 = get_scored_data(code, responses1)
-    values2 = get_scored_data(code, responses2)
-    pval = mwu_test(values1, values2)
-    return pval

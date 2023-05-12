@@ -16,6 +16,8 @@ from mhw.utils import get_confidence_interval, standard_error, fpc, func, mean
 from mhw.config import pop, zscore
 from mhw.read_statistics import get_possible_answers
 from mhw.scoring import get_value_dict
+from mhw.read_results import get_included_responses
+from mhw.scoring import get_scored_data
 
 def make_histo(data, title, desc):
     plt.clf()
@@ -39,119 +41,74 @@ def make_histo(data, title, desc):
     plt.close()
 
 
-def plot_impact_statistics(impact_statistics, complement=False, title="", description="", x_labels=None, y_labels=None):
+def plot_impact_statistics(impact_statistics,
+                           complement=False,
+                           title="",
+                           x_labels=None,
+                           y_labels=None,
+                           include_sample_size=True):
+    x_labels = x_labels.copy()
+    y_labels = y_labels.copy()
     plt.clf()
     df = impact_statistics
     code = df.index[0]
-    res_str = "(" + str(df.attrs['included_respondents']) + " of " + str(df.attrs['sample_size']) + ")"
-    description = df.attrs['description'] + res_str
-    # Generate labels if not specified
-    if not x_labels:
-        x_labels = df.index.tolist()
-    if not y_labels:
-        y_labels = get_possible_answers(code)
-        bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
-        y_labels = [label for label in y_labels if label not in bad_labels]
-        y_labels = ['\n'.join(wrap(l, 10)) for l in y_labels]
+
+    included_respondents = df.attrs['included_respondents']
+    sample_size = df.attrs['sample_size']
+    description = df.attrs['description']
+    include = df.attrs['include']
+    mean_df = df['mean']
+    moe_df = df['moe']
+
+    if complement:
+        included_respondents = df.attrs['complementary_respondents']
+        sample_size = df.attrs['sample_size']
+        description = "(comp)" + df.attrs['description']
+        include = df.attrs['include_comp']
+        mean_df = df['comp_mean']
+        moe_df = df['comp_moe']
+
+    # Add information about sample size
+    if include_sample_size:
+        res_str = "(" + str(included_respondents) + " of " + str(sample_size) + ")"
+        description = description + res_str
+
+    if include_sample_size:
+        # Generate labels if not specified
+        if not x_labels:
+            x_labels = df.index.tolist()
+        if not y_labels:
+            y_labels = get_possible_answers(code)
+            bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+            y_labels = [label for label in y_labels if label not in bad_labels]
+            y_labels = ['\n'.join(wrap(label, 10)) for label in y_labels]
+
+    # Add valid respondents to x_label
+    for i, label in enumerate(x_labels):
+        question_code = df.index[i]
+        responses = get_included_responses(question_code, include)
+        scores = get_scored_data(question_code, responses)
+        valid = len(scores)
+        p_value = df['pvalue'][question_code]
+        x_labels[i] += "\n {}".format(valid)
+        x_labels[i] += "\n {}".format(round(p_value, 2))
 
     # Get bar colours from colourmap
     cmap = matplotlib.colormaps['RdYlGn']
     colours = []
     low_y = min(list(get_value_dict(code).values()))
     high_y = max(list(get_value_dict(code).values()))
-    for val in df['mean'].values.tolist():
+    for val in mean_df.values.tolist():
         cval = math.fabs(low_y - val)
         cval = cval / (high_y - low_y)
         colours.append(matplotlib.colors.to_hex(cmap(cval)))
 
     # Create plot axis
     title = title + "\n" + description
-    ax = df['mean'].plot.bar(color=colours, title=title)
+    ax = mean_df.plot.bar(color=colours, title=title, yerr=moe_df, capsize=4)
     ax.set_yticks(range(low_y, high_y + 1))
     ax.set_yticklabels(y_labels)
-    ax.set_xticklabels(x_labels, rotation=45, fontsize=5)
+    ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
     ax.set_ylim([low_y, high_y])
     ax.tick_params(direction='in')
     plt.show()
-
-
-def make_barplot(title, desc, flag, lowy, highy, data_dict, ylabels, minorgridflag = False, xlabels = None):
-    plt.clf()
-    qflag = False
-    if xlabels:
-        qflag = True
-        if len(xlabels) == len(data_dict.keys()):
-            new_dict = {}
-            for i, key in enumerate(data_dict.keys()):
-                new_dict[xlabels[i]] = data_dict[key]
-            data_dict = new_dict
-        else:
-            raise Exception('The list of xlabels must have a number of entries equal to keys in the data dict')
-    filtered = {k: v for k, v in data_dict.items() if v is not None}
-    xlabels = list(filtered.keys())
-    series = list(filtered.values())   
-    means = [None]*len(xlabels)
-    errors = [None]*len(xlabels)
-    for i, data in enumerate(series):
-        data = [i for i in data if not pd.isna(i)]
-        if not qflag:
-            xlabels[i] = xlabels[i] + "\n" + str(len(data))
-        m = mean(data)
-        if pd.isna(m):
-            continue
-        means[i]=(round(m,2))
-        try:
-            errors[i]=(round(standard_error(data) * zscore * fpc(pop, len(data)), 2))
-        except TypeError:
-            errors[i] = 0
-    xlabels = [x for i, x in enumerate(xlabels) if not pd.isna(means[i])]
-    means = [i for i in means if not pd.isna(i)]
-    errors = [i for i in errors if not pd.isna(i)]
-    if not xlabels:
-        return
-    cmap = matplotlib.cm.get_cmap('RdYlGn')    
-    colours = []
-    for val in means:
-        cval = math.fabs(lowy - val)
-        cval = cval / (highy - lowy)
-        colours.append(matplotlib.colors.to_hex(cmap(cval)))    
-    _, ax = plt.subplots()
-    xpos = list(range(1,len(xlabels)+1))
-    ax.bar(xpos, means, yerr=errors, align='center', alpha=0.5, ecolor='black', capsize=10, zorder=3, color=colours)
-    ax.set_yticks(range(lowy, highy+1))
-    ax.set_ylim([lowy, highy])
-    ax.set_yticklabels(ylabels)
-    ax.set_xticks(xpos)
-    if qflag:
-        ax.set_xticklabels(xlabels)
-    else:
-        ax.set_xticklabels(xlabels, rotation=45, fontsize=5)
-    if minorgridflag:
-        minor_locator = AutoMinorLocator(2)
-        ax.yaxis.set_minor_locator(minor_locator)
-        ax.grid(zorder=0, which='minor')
-    else:
-        ax.grid(axis='y')
-    ax.set_title(title + "\n" + desc)
-    if flag:
-        ax.set_ylim([lowy, highy])
-    ax.tick_params(direction='in')
-    plt.savefig(title + "_" + desc + ".png")
-    plt.close()
-
-
-def pie_chart(code, rows, title, legend_title, counts):
-    plt.clf()
-    _, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-    x = counts
-    subs = get_possible_answers(code)
-    wedges, __, autotexts = ax.pie(x[0:rows], autopct=lambda pct: func(pct, x[0:rows]) if pct > 0 else '',
-                                   textprops=dict(color="w"))
-    ax.legend(wedges, subs,
-              title="\n".join(wrap(legend_title)),
-              loc="center left",
-              bbox_to_anchor=(1, 0, 0.5, 1))    
-    plt.setp(autotexts, size=8, weight="bold")
-    ax.set_title("\n".join(wrap(title)))       
-    plt.show()
-    plt.close()

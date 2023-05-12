@@ -100,6 +100,7 @@ def plot_impact_statistics(impact_statistics,
     low_y = min(list(get_value_dict(code).values()))
     high_y = max(list(get_value_dict(code).values()))
     for val in mean_df.values.tolist():
+        print(val)
         cval = math.fabs(low_y - val)
         cval = cval / (high_y - low_y)
         colours.append(matplotlib.colors.to_hex(cmap(cval)))

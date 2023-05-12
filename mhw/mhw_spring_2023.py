@@ -50,20 +50,10 @@ def _get_academic_impact(resp_id):
         return score_mean
 
 
-def _get_impact_stats_comparison(include, include_other=None, description="", print_table=False):
+def _get_stats_comparison(*args, include=None, description=None, include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
-    codes = ['AE6(SQ001)',
-             'AE6(SQ002)',
-             'AE6(SQ003)',
-             'AE6(SQ004)',
-             'AE6(SQ005)',
-             'AE6(SQ006)',
-             'AE6(SQ007)',
-             'AE6(SQ008)',
-             'AE6(SQ009)',
-             'AE6(SQ010)']
     stats = ['subquestion',
              'mean',
              'moe',
@@ -76,79 +66,97 @@ def _get_impact_stats_comparison(include, include_other=None, description="", pr
              'comp_median',
              'comp_hconf',
              'pvalue']
-    impact_stats = pd.DataFrame(index=codes, columns=stats)
-    impact_stats.attrs['include'] = include
-    impact_stats.attrs['include_comp'] = include_comp
-    impact_stats.attrs['description'] = description
-    impact_stats.attrs['sample_size'] = all_respondents
-    impact_stats.attrs['population_size'] = pop
-    impact_stats.attrs['included_respondents'] = len(include)
-    impact_stats.attrs['complementary_respondents'] = len(include_comp)
-    for code in impact_stats.index.tolist():
-        impact_stats.loc[code, 'subquestion'] = get_subquestion(code)
+    frames = []
+    for codes in args:
+        frames.append(pd.DataFrame(index=codes, columns=stats))
 
-        responses = get_included_responses(code, include)
-        scores = np.array(get_scored_data(code, responses))
-        scores = [i for i in scores if not pd.isna(i)]
-        scores_inc = scores.copy()
+    for df in frames:
+        df.attrs['include'] = include
+        df.attrs['include_comp'] = include_comp
+        df.attrs['description'] = description
+        df.attrs['sample_size'] = all_respondents
+        df.attrs['population_size'] = pop
+        df.attrs['included_respondents'] = len(include)
+        df.attrs['complementary_respondents'] = len(include_comp)
+        for code in df.index.tolist():
+            df.loc[code, 'subquestion'] = get_subquestion(code)
 
-        if scores:
-            impact_stats.loc[code, 'mean'] = float(np.mean(scores))
-            impact_stats.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
-            lconf, median, hconf = get_confidence_interval(scores)
-            impact_stats.loc[code, 'lconf'] = float(lconf)
-            impact_stats.loc[code, 'median'] = float(median)
-            impact_stats.loc[code, 'hconf'] = float(hconf)
-        else:
-            impact_stats.loc[code, 'mean'] = None
-            impact_stats.loc[code, 'moe'] = None
-            impact_stats.loc[code, 'lconf'] = None
-            impact_stats.loc[code, 'median'] = None
-            impact_stats.loc[code, 'hconf'] = None
+            responses = get_included_responses(code, include)
+            scores = np.array(get_scored_data(code, responses))
+            scores = [i for i in scores if not pd.isna(i)]
+            scores_inc = scores.copy()
 
-        responses = get_included_responses(code, include_comp)
-        scores = np.array(get_scored_data(code, responses))
-        scores = [i for i in scores if not pd.isna(i)]
-        scores_comp = scores.copy()
-        if len(scores) > 1:
-            impact_stats.loc[code, 'comp_mean'] = float(np.mean(scores))
-            impact_stats.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
-            lconf, median, hconf = get_confidence_interval(scores)
-            impact_stats.loc[code, 'comp_lconf'] = float(lconf)
-            impact_stats.loc[code, 'comp_median'] = float(median)
-            impact_stats.loc[code, 'comp_hconf'] = float(hconf)
-        else:
-            impact_stats.loc[code, 'comp_mean'] = None
-            impact_stats.loc[code, 'comp_moe'] = None
-            impact_stats.loc[code, 'comp_lconf'] = None
-            impact_stats.loc[code, 'comp_median'] = None
-            impact_stats.loc[code, 'comp_hconf'] = None
-        if scores_inc and scores_comp:
-            impact_stats.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
-        else:
-            impact_stats.loc[code, 'pvalue'] = None
+            if scores:
+                df.loc[code, 'mean'] = float(np.mean(scores))
+                df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+                lconf, median, hconf = get_confidence_interval(scores)
+                df.loc[code, 'lconf'] = float(lconf)
+                df.loc[code, 'median'] = float(median)
+                df.loc[code, 'hconf'] = float(hconf)
+            else:
+                df.loc[code, 'mean'] = None
+                df.loc[code, 'moe'] = None
+                df.loc[code, 'lconf'] = None
+                df.loc[code, 'median'] = None
+                df.loc[code, 'hconf'] = None
 
-    impact_stats = impact_stats.replace(pd.NA, np.nan)
+            responses = get_included_responses(code, include_comp)
+            scores = np.array(get_scored_data(code, responses))
+            scores = [i for i in scores if not pd.isna(i)]
+            scores_comp = scores.copy()
+            if len(scores) > 1:
+                df.loc[code, 'comp_mean'] = float(np.mean(scores))
+                df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+                lconf, median, hconf = get_confidence_interval(scores)
+                df.loc[code, 'comp_lconf'] = float(lconf)
+                df.loc[code, 'comp_median'] = float(median)
+                df.loc[code, 'comp_hconf'] = float(hconf)
+            else:
+                df.loc[code, 'comp_mean'] = None
+                df.loc[code, 'comp_moe'] = None
+                df.loc[code, 'comp_lconf'] = None
+                df.loc[code, 'comp_median'] = None
+                df.loc[code, 'comp_hconf'] = None
+            if scores_inc and scores_comp:
+                df.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
+            else:
+                df.loc[code, 'pvalue'] = None
 
-    if print_table:
-        print("********************************************************************")
-        print("Calculate the impact score of specific academic experiences on mental health")
-        print("with respect to the mental health continuum.")
-        print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
-        print("Top question:\t,", get_top_question('AE6(SQ001)'))
-        print(impact_stats.round(2).to_csv(sep='\t'))
-        print("********************************************************************")
+        df = df.replace(pd.NA, np.nan)
 
-    return impact_stats
+        if print_table:
+            print("********************************************************************")
+            print("Calculate the impact score of specific academic experiences on mental health")
+            print("with respect to the mental health continuum.")
+            print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
+            print("Top question:\t,", get_top_question(df.index[0]))
+            print(df.round(2).to_csv(sep='\t'))
+            print("********************************************************************")
+
+    if len(frames) == 1:
+        return frames[0]
+    else:
+        return frames
 
 
 def ae6(include, description, include_other=None):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, inc_under)
-    impact_stats = _get_impact_stats_comparison(include=include,
-                                                description=description,
-                                                include_other=include_comp)
+    codes = ['AE6(SQ001)',
+             'AE6(SQ002)',
+             'AE6(SQ003)',
+             'AE6(SQ004)',
+             'AE6(SQ005)',
+             'AE6(SQ006)',
+             'AE6(SQ007)',
+             'AE6(SQ008)',
+             'AE6(SQ009)',
+             'AE6(SQ010)']
+    impact_stats = _get_stats_comparison(codes,
+                                         include=include,
+                                         description=description,
+                                         include_other=include_comp)
     title = "Impact of academics on wellness"
     xlabels = ["classwork",
                "labwork",
@@ -173,6 +181,7 @@ def ae6(include, description, include_other=None):
                            title=title,
                            x_labels=xlabels,
                            y_labels=ylabels)
+    return impact_stats
 
 
 def mh2(include, desc, other_include=None, print_table=False):
@@ -222,6 +231,13 @@ def mh2(include, desc, other_include=None, print_table=False):
     res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
     make_histo(scores, "Mental_health_continuum" + res_str, desc)
     make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
+
+
+if __name__ == "__main__":
+    ae6(include=inc_under, description="Undergraduates")
+
+
+# OLD
 
 def ae0_and_ae1(include, desc, other_include=None):
     include_comp = subtract_include([True] * all_respondents, include)

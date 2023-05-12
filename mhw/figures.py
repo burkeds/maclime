@@ -19,13 +19,14 @@ from mhw.scoring import get_value_dict
 from mhw.read_results import get_included_responses
 from mhw.scoring import get_scored_data
 
+
 def make_histo(data, title, desc):
     plt.clf()
     data = [i for i in data if not pd.isna(i)]
     if not data:
         return
     _, ax = plt.subplots()
-    N, __, patches = ax.hist(data, bins = [-2.5,-1.5,-0.5,0.5, 1.5,2.5], edgecolor='black', linewidth=1, zorder=3)    
+    N, __, patches = ax.hist(data, bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], edgecolor='black', linewidth=1, zorder=3)
     ax.bar_label(patches)
     ax.set_title(title + "\n" + desc)
     ax.set_xticks([-2,-1,0,1,2])
@@ -36,9 +37,9 @@ def make_histo(data, title, desc):
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     for i in range(len(N)):
         patches[i].set_facecolor(color[i])
-    plt.savefig(title + "_" + desc + ".png")
-    #plt.show()
-    plt.close()
+    # plt.savefig(title + "_" + desc + ".png")
+    plt.show()
+    # plt.close()
 
 
 def plot_impact_statistics(impact_statistics,

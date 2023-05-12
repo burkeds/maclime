@@ -24,7 +24,7 @@ from mhw.read_statistics import get_possible_answers
 results = get_results()
 
 
-def get_academic_impact(resp_id):
+def _get_academic_impact(resp_id):
     resp_id = int(resp_id)
     impact_codes = ['AE6(SQ001)',
                     'AE6(SQ002)',
@@ -142,11 +142,13 @@ def _get_impact_stats_comparison(include, include_other=None, description="", pr
     return impact_stats
 
 
-def ae6(include, description):
-    include_comp = subtract_include(include_all, inc_under)
+def ae6(include, description, include_other=None):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
     impact_stats = _get_impact_stats_comparison(include=include,
-                                               description=description,
-                                               include_other=include_comp)
+                                                description=description,
+                                                include_other=include_comp)
     title = "Impact of academics on wellness"
     xlabels = ["classwork",
                "labwork",
@@ -172,6 +174,54 @@ def ae6(include, description):
                            x_labels=xlabels,
                            y_labels=ylabels)
 
+
+def mh2(include, desc, other_include=None, print_table=False):
+    code = 'MH2'
+    include_comp = subtract_include(include_all, include)
+    if other_include:
+        include_comp = other_include
+        # Collect statistics from mental health continuum responses
+    responses = get_included_responses(code, include)
+    scores = get_scored_data(code, responses)
+    comp_responses = get_included_responses(code, include_comp)
+    comp_scores = get_scored_data(code, comp_responses)
+    lconf, median, hconf = get_confidence_interval(scores)
+    pval = mwu_test(scores, comp_scores)
+    try:
+        se = standard_error(scores) * zscore * fpc(pop, len(scores))
+    except TypeError:
+        se = None
+    print_list = [np.mean(scores),
+                  se,
+                  lconf,
+                  median,
+                  hconf,
+                  pval]
+    if print_table:
+        print("********************************************************************")
+        print("Self-perceived position on mental health continuum.")
+        print("Scores are scaled from -2 (in crisis) to +2 (excelling)")
+        print("Top question: ", get_top_question('MH2'))
+        print("code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
+        print('MH2', end="\t")
+        print("None", end="\t")
+        if not responses:
+            print("No valid responses.")
+            return None
+        for num in print_list:
+            try:
+                print(round(num, 2), end="\t")
+            except TypeError:
+                print(None, end="\t")
+        print("\n")
+        print("********************************************************************")
+    # Build two histograms
+    included_respondents = len(include)
+    included_respondents_comp = len(include_comp)
+    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
+    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
+    make_histo(scores, "Mental_health_continuum" + res_str, desc)
+    make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
 
 def ae0_and_ae1(include, desc, other_include=None):
     include_comp = subtract_include([True] * all_respondents, include)
@@ -731,49 +781,4 @@ def ae7(include, desc, other_include=None):
     pass
 
 
-def mental_health_continuum_stats(include, desc, other_include=None):
-    code = 'MH2'
-    include_comp = subtract_include([True] * len(include), include)
-    if other_include:
-        include_comp = other_include
-        # Collect statistics from mental health continuum responses
-    responses = get_included_responses(code, include)
-    scores = get_scored_data(code, responses)
-    comp_responses = get_included_responses(code, include_comp)
-    comp_scores = get_scored_data(code, comp_responses)
-    lconf, median, hconf = get_confidence_interval(scores)
-    pval = mwu_test(scores, comp_scores)
-    try:
-        se = standard_error(scores) * zscore * fpc(pop, len(scores))
-    except TypeError:
-        se = None
-    print_list = [mean(scores),
-                  se,
-                  lconf,
-                  median,
-                  hconf,
-                  pval]
-    print("********************************************************************")
-    print("Self-perceived position on mental health continuum.")
-    print("Scores are scaled from -2 (in crisis) to +2 (excelling)")
-    print("Top question: ", get_top_question('MH2'))
-    print("code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
-    print('MH2', end="\t")
-    print("None", end="\t")
-    if not responses:
-        print("No valid responses.")
-        return None
-    for num in print_list:
-        try:
-            print(round(num, 2), end="\t")
-        except TypeError:
-            print(None, end="\t")
-    print("\n")
-    print("********************************************************************")
-    # Build two histograms
-    included_respondents = get_include_valid_entries(include)
-    included_respondents_comp = get_include_valid_entries(include_comp)
-    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
-    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
-    make_histo(scores, "Mental_health_continuum" + res_str, desc)
-    make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
+

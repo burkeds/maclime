@@ -57,8 +57,6 @@ def plot_impact_statistics(impact_statistics,
                            x_labels=None,
                            y_labels=None,
                            include_sample_size=True):
-    x_labels = x_labels.copy()
-    y_labels = y_labels.copy()
     plt.clf()
     df = impact_statistics
     code = df.index[0]

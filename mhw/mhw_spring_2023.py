@@ -140,6 +140,60 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
         return frames
 
 
+def mh2(include, description="", include_other=None, print_table=False):
+    codes = ['MH2']
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
+    mh2_stats = _get_stats_comparison(codes,
+                                      include=include,
+                                      description=description,
+                                      include_other=include_comp,
+                                      print_table=print_table)
+
+    make_histo(mh2_stats, "Mental_health_continuum", description)
+    make_histo(mh2_stats, "Mental_health_continuum", description, complementary=True)
+
+
+def ae0(include, description, include_other=None, print_table=False):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
+    codes = ['AE0(SQ001)',
+             'AE0(SQ002)',
+             'AE0(SQ003)',
+             'AE0(SQ004)',
+             'AE0(SQ005)',
+             'AE0(SQ006)']
+    ae0_stats = _get_stats_comparison(codes,
+                                      include=include,
+                                      description=description,
+                                      include_other=include_comp,
+                                      print_table=print_table)
+    plot_impact_statistics(ae0_stats, title="Social perception")
+    plot_impact_statistics(ae0_stats, title="Social perception", complement=True)
+    return ae0_stats
+
+
+def ae1(include, description, include_other=None, print_table=False):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
+    codes = ['AE1(SQ001)',
+             'AE1(SQ002)',
+             'AE1(SQ003)',
+             'AE1(SQ004)',
+             'AE1(SQ005)']
+    ae0_stats = _get_stats_comparison(codes,
+                                      include=include,
+                                      description=description,
+                                      include_other=include_comp,
+                                      print_table=print_table)
+    plot_impact_statistics(ae0_stats, title="Department perception")
+    plot_impact_statistics(ae0_stats, title="Department perception", complement=True)
+    return ae0_stats
+
+
 def ae6(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
@@ -184,49 +238,6 @@ def ae6(include, description="", include_other=None, print_table=False):
                            x_labels=xlabels,
                            y_labels=ylabels)
     return impact_stats
-
-
-def mh2(include, description="", include_other=None, print_table=False):
-    codes = ['MH2']
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
-    mh2_stats = _get_stats_comparison(codes,
-                                      include=include,
-                                      description=description,
-                                      include_other=include_comp,
-                                      print_table=print_table)
-
-    make_histo(mh2_stats, "Mental_health_continuum", description)
-    make_histo(mh2_stats, "Mental_health_continuum", description, complementary=True)
-
-
-def ae0_ae1(include, description, include_other=None, print_table=False):
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
-    codes = ['AE0(SQ001)',
-             'AE0(SQ002)',
-             'AE0(SQ003)',
-             'AE0(SQ004)',
-             'AE0(SQ005)',
-             'AE0(SQ006)',
-             'AE1(SQ001)',
-             'AE1(SQ002)',
-             'AE1(SQ003)',
-             'AE1(SQ004)',
-             'AE1(SQ005)']
-    impact_stats = _get_stats_comparison(codes,
-                                         include=include,
-                                         description=description,
-                                         include_other=include_comp,
-                                         print_table=print_table)
-
-    return impact_stats
-
-if __name__ == "__main__":
-    mh2(inc_under, "Undergraduates")
-    dfae0 = ae0_ae1(inc_under, "undergraduates")
 
 # OLD
 

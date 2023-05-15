@@ -20,20 +20,29 @@ from mhw.read_results import get_included_responses
 from mhw.scoring import get_scored_data
 
 
-def make_histo(data, title, desc):
+def make_histo(frame, title, description, complementary=False):
     plt.clf()
-    data = [i for i in data if not pd.isna(i)]
-    if not data:
-        return
+    sample = frame.attrs['sample_size']
+    if complementary:
+        data = frame.attrs['complementary_scores']
+        included_respondents = frame.attrs['complementary_respondents']
+        res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
+        description = "(comp)" + description
+    else:
+        data = frame.attrs['include_scores']
+        included_respondents = frame.attrs['included_respondents']
+        res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
+    title += res_str
+
     _, ax = plt.subplots()
     N, __, patches = ax.hist(data, bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], edgecolor='black', linewidth=1, zorder=3)
     ax.bar_label(patches)
-    ax.set_title(title + "\n" + desc)
-    ax.set_xticks([-2,-1,0,1,2])
+    ax.set_title(title + "\n" + description)
+    ax.set_xticks([-2, -1, 0, 1, 2])
     ax.set_xticklabels(["in crisis", "struggling", "surviving", "thriving", "excelling"])
     ax.grid(axis='y', zorder=0)
     ax.set_ylabel('Respondent count')
-    color = {0:'red', 1:'orange', 2:'yellow', 3:'#90EE90', 4:'#013220'}
+    color = {0: 'red', 1: 'orange', 2: 'yellow', 3: '#90EE90', 4: '#013220'}
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     for i in range(len(N)):
         patches[i].set_facecolor(color[i])

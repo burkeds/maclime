@@ -50,7 +50,7 @@ def _get_academic_impact(resp_id):
         return score_mean
 
 
-def _get_stats_comparison(*args, include=None, description=None, include_other=None, print_table=False):
+def _get_stats_comparison(*args, include=None, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -85,6 +85,8 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
             scores = np.array(get_scored_data(code, responses))
             scores = [i for i in scores if not pd.isna(i)]
             scores_inc = scores.copy()
+            df.attrs['include_responses'] = responses
+            df.attrs['include_scores'] = scores_inc
 
             if scores:
                 df.loc[code, 'mean'] = float(np.mean(scores))
@@ -104,6 +106,8 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
             scores = np.array(get_scored_data(code, responses))
             scores = [i for i in scores if not pd.isna(i)]
             scores_comp = scores.copy()
+            df.attrs['complementary_responses'] = responses
+            df.attrs['complementary_scores'] = scores_comp
             if len(scores) > 1:
                 df.loc[code, 'comp_mean'] = float(np.mean(scores))
                 df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
@@ -136,7 +140,7 @@ def _get_stats_comparison(*args, include=None, description=None, include_other=N
         return frames
 
 
-def ae6(include, description, include_other=None):
+def ae6(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, inc_under)
@@ -153,7 +157,8 @@ def ae6(include, description, include_other=None):
     impact_stats = _get_stats_comparison(codes,
                                          include=include,
                                          description=description,
-                                         include_other=include_comp)
+                                         include_other=include_comp,
+                                         print_table=print_table)
     title = "Impact of academics on wellness"
     xlabels = ["classwork",
                "labwork",
@@ -181,53 +186,47 @@ def ae6(include, description, include_other=None):
     return impact_stats
 
 
-def mh2(include, desc, other_include=None, print_table=False):
-    code = 'MH2'
-    include_comp = subtract_include(include_all, include)
-    if other_include:
-        include_comp = other_include
-        # Collect statistics from mental health continuum responses
-    responses = get_included_responses(code, include)
-    scores = get_scored_data(code, responses)
-    comp_responses = get_included_responses(code, include_comp)
-    comp_scores = get_scored_data(code, comp_responses)
-    lconf, median, hconf = get_confidence_interval(scores)
-    pval = mwu_test(scores, comp_scores)
-    try:
-        se = standard_error(scores) * zscore * fpc(pop, len(scores))
-    except TypeError:
-        se = None
-    print_list = [np.mean(scores),
-                  se,
-                  lconf,
-                  median,
-                  hconf,
-                  pval]
-    if print_table:
-        print("********************************************************************")
-        print("Self-perceived position on mental health continuum.")
-        print("Scores are scaled from -2 (in crisis) to +2 (excelling)")
-        print("Top question: ", get_top_question('MH2'))
-        print("code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
-        print('MH2', end="\t")
-        print("None", end="\t")
-        if not responses:
-            print("No valid responses.")
-            return None
-        for num in print_list:
-            try:
-                print(round(num, 2), end="\t")
-            except TypeError:
-                print(None, end="\t")
-        print("\n")
-        print("********************************************************************")
-    # Build two histograms
-    included_respondents = len(include)
-    included_respondents_comp = len(include_comp)
-    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
-    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
-    make_histo(scores, "Mental_health_continuum" + res_str, desc)
-    make_histo(comp_scores, "Mental_health_continuum" + res_str_comp, "(comp)" + desc)
+def mh2(include, description="", include_other=None, print_table=False):
+    codes = ['MH2']
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
+    mh2_stats = _get_stats_comparison(codes,
+                                      include=include,
+                                      description=description,
+                                      include_other=include_comp,
+                                      print_table=print_table)
+
+    make_histo(mh2_stats, "Mental_health_continuum", description)
+    make_histo(mh2_stats, "Mental_health_continuum", description, complementary=True)
+
+
+def ae0_ae1(include, description, include_other=None, print_table=False):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, inc_under)
+    codes = ['AE0(SQ001)',
+             'AE0(SQ002)',
+             'AE0(SQ003)',
+             'AE0(SQ004)',
+             'AE0(SQ005)',
+             'AE0(SQ006)',
+             'AE1(SQ001)',
+             'AE1(SQ002)',
+             'AE1(SQ003)',
+             'AE1(SQ004)',
+             'AE1(SQ005)']
+    impact_stats = _get_stats_comparison(codes,
+                                         include=include,
+                                         description=description,
+                                         include_other=include_comp,
+                                         print_table=print_table)
+
+    return impact_stats
+
+if __name__ == "__main__":
+    mh2(inc_under, "Undergraduates")
+    dfae0 = ae0_ae1(inc_under, "undergraduates")
 
 # OLD
 

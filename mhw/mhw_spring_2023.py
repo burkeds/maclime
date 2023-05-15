@@ -157,7 +157,7 @@ def mh2(include, description="", include_other=None, print_table=False):
     make_histo(mh2_stats, "Mental_health_continuum", description, complementary=True)
 
 
-def ae0(include, description, include_other=None, print_table=False):
+def ae0(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -177,7 +177,7 @@ def ae0(include, description, include_other=None, print_table=False):
     return stats_df
 
 
-def ae1(include, description, include_other=None, print_table=False):
+def ae1(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -196,7 +196,7 @@ def ae1(include, description, include_other=None, print_table=False):
     return ae0_stats
 
 
-def ae2(include, description, include_other=None, print_table=False):
+def ae2(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)

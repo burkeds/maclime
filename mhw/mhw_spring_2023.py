@@ -341,8 +341,24 @@ def ae6(include, description="", include_other=None, print_table=False):
                            y_labels=ylabels)
     return impact_stats
 
-def ae7(include, desc, other_include=None):
-    pass
 
-
+def ae7(include, description="", print_table=False):
+    code = 'AE7'
+    responses = get_included_responses(code, include)
+    q_ae7 = questions['AE7']
+    possible_answers = q_ae7.possible_answers
+    counts = []
+    for answer in possible_answers:
+        count = responses.count(answer)
+        counts.append(count)
+    if print_table:
+        print("********************************************************************")
+        print("Question code: {}".format(code))
+        print("Top question text: {}".format(q_ae7.question))
+        print("Inclusion description: {}".format(description))
+        print("Respondents fitting inclusion criteria: {}".format(len(include)))
+        print("Sample size: {}".format(all_respondents))
+        print('\t'.join(possible_answers))
+        print('\t'.join([str(i) for i in counts]))
+        print("********************************************************************")
 

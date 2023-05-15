@@ -17,11 +17,12 @@ from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_q
 from mhw.figures import make_histo
 from mhw.include_arrays import include_all, subtract_include
 from mhw.figures import plot_impact_statistics
-from mhw.include_arrays import inc_under
+from mhw.include_arrays import inc_under, inc_grad
 from mhw.scoring import get_value_dict
-from mhw.read_statistics import get_possible_answers
+from mhw.read_statistics import get_possible_answers, get_all_statistics
 
 results = get_results()
+questions = get_all_statistics()
 
 
 def _get_academic_impact(resp_id):
@@ -78,17 +79,19 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
         df.attrs['population_size'] = pop
         df.attrs['included_respondents'] = len(include)
         df.attrs['complementary_respondents'] = len(include_comp)
+
+        first_code = df.index[0]
+        df.attrs['question'] = questions[first_code].question
+        df.attrs['possible_answers'] = questions[first_code].possible_answers
         for code in df.index.tolist():
             df.loc[code, 'subquestion'] = get_subquestion(code)
-
             responses = get_included_responses(code, include)
             scores = np.array(get_scored_data(code, responses))
             scores = [i for i in scores if not pd.isna(i)]
             scores_inc = scores.copy()
             df.attrs['include_responses'] = responses
             df.attrs['include_scores'] = scores_inc
-
-            if scores:
+            if len(scores) > 1:
                 df.loc[code, 'mean'] = float(np.mean(scores))
                 df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
                 lconf, median, hconf = get_confidence_interval(scores)
@@ -121,6 +124,7 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
                 df.loc[code, 'comp_lconf'] = None
                 df.loc[code, 'comp_median'] = None
                 df.loc[code, 'comp_hconf'] = None
+
             if scores_inc and scores_comp:
                 df.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
             else:
@@ -128,10 +132,8 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
         frames[i] = df.replace(pd.NA, np.nan)
         if print_table:
             print("********************************************************************")
-            print("Calculate the impact score of specific academic experiences on mental health")
-            print("with respect to the mental health continuum.")
-            print("Impact score scaled from -2 (strongly negative) to +2 (strongly positive).")
-            print("Top question:\t,", get_top_question(df.index[0]))
+            print("Top question text: {}".format(df.attrs['question']))
+            print("Possible answers: {}".format(df.attrs['possible_answers']))
             print(df.round(2).to_csv(sep='\t'))
             print("********************************************************************")
     if len(frames) == 1:
@@ -158,27 +160,27 @@ def mh2(include, description="", include_other=None, print_table=False):
 def ae0(include, description, include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
+        include_comp = subtract_include(include_all, include)
     codes = ['AE0(SQ001)',
              'AE0(SQ002)',
              'AE0(SQ003)',
              'AE0(SQ004)',
              'AE0(SQ005)',
              'AE0(SQ006)']
-    ae0_stats = _get_stats_comparison(codes,
-                                      include=include,
-                                      description=description,
-                                      include_other=include_comp,
-                                      print_table=print_table)
-    plot_impact_statistics(ae0_stats, title="Social perception")
-    plot_impact_statistics(ae0_stats, title="Social perception", complement=True)
-    return ae0_stats
+    stats_df = _get_stats_comparison(codes,
+                                     include=include,
+                                     description=description,
+                                     include_other=include_comp,
+                                     print_table=print_table)
+    plot_impact_statistics(stats_df, title="Social perception")
+    plot_impact_statistics(stats_df, title="Social perception", complement=True)
+    return stats_df
 
 
 def ae1(include, description, include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
+        include_comp = subtract_include(include_all, include)
     codes = ['AE1(SQ001)',
              'AE1(SQ002)',
              'AE1(SQ003)',
@@ -194,10 +196,31 @@ def ae1(include, description, include_other=None, print_table=False):
     return ae0_stats
 
 
+def ae2(include, description, include_other=None, print_table=False):
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, include)
+    codes = ['AE2(SQ001)',
+             'AE2(SQ002)',
+             'AE2(SQ003)',
+             'AE2(SQ004)',
+             'AE2(SQ005)',
+             'AE2(SQ006)',
+             'AE2(SQ007)']
+    stats = _get_stats_comparison(codes,
+                                  include=include,
+                                  description=description,
+                                  include_other=include_comp,
+                                  print_table=print_table)
+    plot_impact_statistics(stats, title="Graduate student workload")
+    plot_impact_statistics(stats, title="Graduate student workload", complement=True)
+    return stats
+
+
 def ae6(include, description="", include_other=None, print_table=False):
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
+        include_comp = subtract_include(include_all, include)
     codes = ['AE6(SQ001)',
              'AE6(SQ002)',
              'AE6(SQ003)',
@@ -239,217 +262,8 @@ def ae6(include, description="", include_other=None, print_table=False):
                            y_labels=ylabels)
     return impact_stats
 
+
 # OLD
-
-def ae0_and_ae1(include, desc, other_include=None):
-    include_comp = subtract_include([True] * all_respondents, include)
-    if other_include:
-        include_comp = other_include
-    #    Dict = {CODE        : [subquestion, scores, comp_scores, mean, moe, lconf, median, hconf, pvalue]}
-    data_dict = {'AE0(SQ001)': [None, None, None, None, None, None, None, None, None],
-                 'AE0(SQ002)': [None, None, None, None, None, None, None, None, None],
-                 'AE0(SQ003)': [None, None, None, None, None, None, None, None, None],
-                 'AE0(SQ004)': [None, None, None, None, None, None, None, None, None],
-                 'AE0(SQ005)': [None, None, None, None, None, None, None, None, None],
-                 'AE0(SQ006)': [None, None, None, None, None, None, None, None, None],
-                 'AE1(SQ001)': [None, None, None, None, None, None, None, None, None],
-                 'AE1(SQ002)': [None, None, None, None, None, None, None, None, None],
-                 'AE1(SQ003)': [None, None, None, None, None, None, None, None, None],
-                 'AE1(SQ004)': [None, None, None, None, None, None, None, None, None],
-                 'AE1(SQ005)': [None, None, None, None, None, None, None, None, None]}
-
-    for code in data_dict.keys():
-        responses = get_included_responses(code, include)
-        scores = get_scored_data(code, responses)
-        comp_responses = get_included_responses(code, include_comp)
-        comp_scores = get_scored_data(code, comp_responses)
-        lconf, median, hconf = get_confidence_interval(scores)
-        pval = mwu_test(scores, comp_scores)
-        data_dict[code][0] = get_subquestion(code)
-        data_dict[code][1] = scores
-        data_dict[code][2] = comp_scores
-        data_dict[code][3] = mean(scores)
-        try:
-            data_dict[code][4] = standard_error(scores) * zscore * fpc(pop, len(scores))
-        except TypeError:
-            data_dict[code][4] = None
-        data_dict[code][5] = lconf
-        data_dict[code][6] = median
-        data_dict[code][7] = hconf
-        data_dict[code][8] = pval
-
-    print("********************************************************************")
-    print("Perceptions and feelings")
-    print("Questions AE0(SQ001)-AE0(SQ006) are scored on a scale from 0-4 representing numerical values assigned to the"
-          " possible answers.")
-    print(get_possible_answers('AE0(SQ001)')[0:5])
-    print("Questions AE1(SQ001)-AE1(SQ005) are scored on a scale from -3-3 representing numerical values assigned to"
-          " the possible answers.")
-    print(get_possible_answers('AE1(SQ001)')[0:7])
-    print("\n")
-    print("Top question: ", get_top_question('AE0(SQ001)'))
-    print("code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
-    for code in data_dict.keys():
-        print(code, end="\t")
-        print(data_dict[code][0], end="\t")
-        i = 3
-        while i < 9:
-            try:
-                print(round(data_dict[code][i], 2), end="\t")
-            except TypeError:
-                print(None, end="\t")
-            finally:
-                i = i + 1
-        print("\n", end="")
-    print("********************************************************************")
-
-    data_dict_ae0 = {'AE0(SQ001)': None,
-                     'AE0(SQ002)': None,
-                     'AE0(SQ003)': None,
-                     'AE0(SQ004)': None,
-                     'AE0(SQ005)': None,
-                     'AE0(SQ006)': None}
-    for code in data_dict_ae0.keys():
-        data_dict_ae0[code] = data_dict[code][1]
-    data_dict_ae0_comp = {'AE0(SQ001)': None,
-                          'AE0(SQ002)': None,
-                          'AE0(SQ003)': None,
-                          'AE0(SQ004)': None,
-                          'AE0(SQ005)': None,
-                          'AE0(SQ006)': None}
-    for code in data_dict_ae0_comp.keys():
-        data_dict_ae0_comp[code] = data_dict[code][2]
-    ylabels = ['None of the time', 'Rarely', 'Some of the time', 'Most of the time', 'All of the time']
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    included_respondents = get_include_valid_entries(include)
-    included_respondents_comp = get_include_valid_entries(include_comp)
-    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
-    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
-    make_barplot("Social_perception" + res_str, desc, True, 0, 4, data_dict_ae0, ylabels)
-    make_barplot("Social_perception" + res_str_comp, "(comp)" + desc, True, 0, 4, data_dict_ae0_comp, ylabels)
-    make_barplot("Social_perception", desc, True, 0, 4, data_dict_ae0, ylabels, xlabels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5',
-                                                                                         'Q6'])
-
-    data_dict_ae1 = {'AE1(SQ001)': None,
-                     'AE1(SQ002)': None,
-                     'AE1(SQ003)': None,
-                     'AE1(SQ004)': None,
-                     'AE1(SQ005)': None}
-    for code in data_dict_ae1.keys():
-        data_dict_ae1[code] = data_dict[code][1]
-    data_dict_ae1_comp = {'AE1(SQ001)': None,
-                          'AE1(SQ002)': None,
-                          'AE1(SQ003)': None,
-                          'AE1(SQ004)': None,
-                          'AE1(SQ005)': None}
-    for code in data_dict_ae1_comp.keys():
-        data_dict_ae1_comp[code] = data_dict[code][2]
-    ylabels = ['Strongly disagree', 'Disagree', 'Somewhat disagree', 'Neither agree nor disagree', 'Somewhat agree',
-               'Agree', 'Strongly agree']
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    make_barplot("Department_perception" + res_str, desc, True, -3, 3, data_dict_ae1, ylabels)
-    make_barplot("Department_perception" + res_str_comp, "(comp)" + desc, True, -3, 3, data_dict_ae1_comp, ylabels)
-    make_barplot("Department_perception", desc, True, -3, 3, data_dict_ae1, ylabels, xlabels=['Q1', 'Q2', 'Q3', 'Q4',
-                                                                                              'Q5'])
-
-
-def ae2(include, desc, other_include=None):
-    # Questions about workload for graduate students
-    include_comp = subtract_include([True] * all_respondents, include)
-    if other_include:
-        include_comp = other_include
-    #    Dict = {CODE        : [subquestion, scores, comp_scores, mean, moe, lconf, median, hconf, pvalue]}
-    data_dict = {'AE2(SQ001)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ002)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ003)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ004)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ005)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ006)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ007)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ008)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ009)': [None, None, None, None, None, None, None, None, None],
-                 'AE2(SQ016)': [None, None, None, None, None, None, None, None, None]}
-    for code in data_dict.keys():
-        responses = get_included_responses(code, include)
-        scores = get_scored_data(code, responses)
-        comp_responses = get_included_responses(code, include_comp)
-        comp_scores = get_scored_data(code, comp_responses)
-        lconf, median, hconf = get_confidence_interval(scores)
-        pval = mwu_test(scores, comp_scores)
-        data_dict[code][0] = get_subquestion(code)
-        data_dict[code][1] = scores
-        data_dict[code][2] = comp_scores
-        data_dict[code][3] = mean(scores)
-        try:
-            data_dict[code][4] = standard_error(scores) * zscore * fpc(pop, len(scores))
-        except TypeError:
-            data_dict[code][4] = None
-        data_dict[code][5] = lconf
-        data_dict[code][6] = median
-        data_dict[code][7] = hconf
-        data_dict[code][8] = pval
-
-    print("********************************************************************")
-    print("Graduate student workload")
-    print("Questions AE2(SQ001)-AE2(SQ016) are scored on a scale from 0-4 representing numerical values assigned to the"
-          " possible answers.")
-    print(get_possible_answers('AE2(SQ001)')[0:5])
-    print("\n")
-    print("Top question: ", get_top_question('AE2(SQ001)'))
-    print("code\tsubquestion\tmean\tmargin_of_error\tlconf\tmedian\thconf\tp-value")
-    for code in data_dict.keys():
-        print(code, end="\t")
-        print(data_dict[code][0], end="\t")
-        i = 3
-        while i < 9:
-            try:
-                print(round(data_dict[code][i], 2), end="\t")
-            except TypeError:
-                print(None, end="\t")
-            finally:
-                i = i + 1
-        print("\n", end="")
-    print("********************************************************************")
-
-    data_dict_ae = {'AE2(SQ001)': None,
-                    'AE2(SQ002)': None,
-                    'AE2(SQ003)': None,
-                    'AE2(SQ004)': None,
-                    'AE2(SQ005)': None,
-                    'AE2(SQ006)': None,
-                    'AE2(SQ007)': None,
-                    'AE2(SQ008)': None,
-                    'AE2(SQ009)': None,
-                    'AE2(SQ016)': None}
-    for code in data_dict_ae.keys():
-        data_dict_ae[code] = data_dict[code][1]
-    data_dict_ae_comp = {'AE2(SQ001)': None,
-                         'AE2(SQ002)': None,
-                         'AE2(SQ003)': None,
-                         'AE2(SQ004)': None,
-                         'AE2(SQ005)': None,
-                         'AE2(SQ006)': None,
-                         'AE2(SQ007)': None,
-                         'AE2(SQ008)': None,
-                         'AE2(SQ009)': None,
-                         'AE2(SQ016)': None}
-    for code in data_dict_ae_comp.keys():
-        data_dict_ae_comp[code] = data_dict[code][2]
-    ylabels = ['None of the time', 'Rarely', 'Some of the time', 'Most of the time', 'All of the time']
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
-    included_respondents = get_include_valid_entries(include)
-    included_respondents_comp = get_include_valid_entries(include_comp)
-    res_str = "(" + str(included_respondents) + " of " + str(all_respondents) + ")"
-    res_str_comp = "(" + str(included_respondents_comp) + " of " + str(all_respondents) + ")"
-    if include == [False] * all_respondents:
-        return
-    else:
-        make_barplot("Graduate_student_workload" + res_str, desc, True, 0, 4, data_dict_ae, ylabels)
-    if include_comp == [False] * all_respondents:
-        return
-    else:
-        make_barplot("Graduate_student_workload" + res_str_comp, "(comp)" + desc, True, 0, 4, data_dict_ae_comp,
-                     ylabels)
 
 
 def ae21(include, desc, other_include=None):

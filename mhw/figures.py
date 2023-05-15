@@ -110,13 +110,13 @@ def plot_impact_statistics(impact_statistics,
         cval = math.fabs(low_y - val)
         cval = cval / (high_y - low_y)
         colours.append(matplotlib.colors.to_hex(cmap(cval)))
-
-    # Create plot axis
-    title = title + "\n" + description
-    ax = mean_df.plot.bar(color=colours, title=title, yerr=moe_df, capsize=4)
-    ax.set_yticks(range(low_y, high_y + 1))
-    ax.set_yticklabels(y_labels)
-    ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
-    ax.set_ylim([low_y, high_y])
-    ax.tick_params(direction='in')
-    plt.show()
+    if mean_df.dropna().values.tolist():
+        # Create plot axis
+        title = title + "\n" + description
+        ax = mean_df.plot.bar(color=colours, title=title, yerr=moe_df, capsize=4)
+        ax.set_yticks(range(low_y, high_y + 1))
+        ax.set_yticklabels(y_labels)
+        ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
+        ax.set_ylim([low_y, high_y])
+        ax.tick_params(direction='in')
+        plt.show()

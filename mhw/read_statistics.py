@@ -134,6 +134,7 @@ class Question:
     counts = []
     stats = []
     error = ""
+    data = pd.DataFrame.empty
 
     def __init__(self, code):
         try:
@@ -169,6 +170,11 @@ class Question:
             self.stats = get_data(code)
         except Exception as e:
             self.error = e
+        self.build_dataframe()
+
+    def build_dataframe(self):
+        df = pd.DataFrame(columns=self.question_headers)
+        self.data = df
 
 
 def get_all_statistics():

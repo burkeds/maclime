@@ -19,7 +19,7 @@ from mhw.include_arrays import include_all, subtract_include
 from mhw.figures import plot_impact_statistics
 from mhw.include_arrays import inc_under, inc_grad
 from mhw.scoring import get_value_dict
-from mhw.read_statistics import get_possible_answers, get_all_statistics
+from mhw.read_statistics import get_possible_answers, get_all_statistics, Question
 
 results = get_results()
 questions = get_all_statistics()
@@ -342,23 +342,31 @@ def ae6(include, description="", include_other=None, print_table=False):
     return impact_stats
 
 
-def ae7(include, description="", print_table=False):
-    code = 'AE7'
-    responses = get_included_responses(code, include)
-    q_ae7 = questions['AE7']
-    possible_answers = q_ae7.possible_answers
-    counts = []
-    for answer in possible_answers:
-        count = responses.count(answer)
-        counts.append(count)
+class QuestionInclude(Question):
+    def __init__(self, code, include=None, description=""):
+        super().__init__(code)
+        if not include:
+            raise Exception("You must specify inclusion criteria with an include array of respondent IDs.")
+        else:
+            self.include = include
+        self.description = description
+        responses = get_included_responses(code, include)
+        for ans in self.possible_answers:
+            count = responses.count(ans)
+            self.counts.append(count)
+            self.stats.append(count / len(responses))
+
+if __name__ == "__main__":
+    ae7 = QuestionInclude('AE7', include=inc_under, description="Undergraduates")
+    print_table = True
     if print_table:
         print("********************************************************************")
-        print("Question code: {}".format(code))
-        print("Top question text: {}".format(q_ae7.question))
-        print("Inclusion description: {}".format(description))
-        print("Respondents fitting inclusion criteria: {}".format(len(include)))
+        print("Question code: {}".format(ae7.code))
+        print("Top question text: {}".format(ae7.question))
+        print("Inclusion criteria: {}".format(ae7.description))
+        print("Respondents fitting inclusion criteria: {}".format(len(ae7.include)))
         print("Sample size: {}".format(all_respondents))
-        print('\t'.join(possible_answers))
-        print('\t'.join([str(i) for i in counts]))
+        print('\t'.join(ae7.question_headers))
+        for i, ans in enumerate(ae7.possible_answers):
+            print(ans, "\t", ae7.counts[i], "\t", ae7.stats[i])
         print("********************************************************************")
-

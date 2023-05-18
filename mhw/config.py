@@ -10,10 +10,16 @@ from matplotlib import rc
 import pandas as pd
 
 # Read the results and stats files into a python pandas dataframe
-results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\results-survey265235_2023.xls",
-                             header=0, skiprows=[1], index_col=0)
-statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls",
-                                header=None)
+try:
+    results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\results-survey265235_2023.xls",
+                                header=0, skiprows=[1], index_col=0)
+except FileNotFoundError as _:
+    results_file = pd.DataFrame()
+try:
+    statistics_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\statistic-survey265235_2023.xls",
+                                    header=None)
+except FileNotFoundError as _:
+    statistics_file = pd.DataFrame()
 
 # Sample size. The number of all respondents in results file
 all_respondents = 33

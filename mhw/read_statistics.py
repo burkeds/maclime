@@ -11,29 +11,29 @@ from mhw.config import statistics_file
 import pandas as pd
 from mhw.utils import char_split, merge
 
-data = statistics_file
+# data = statistics_file
 
 
 def generate_codex(stats):
     code_dict = {}
-    for i in range(len(stats)):
-        ls = stats.loc[i].values.tolist()
-        if isinstance(ls[0], str):
-            ls = ls[0].split()
-            if ls[0] == "Summary":
-                code = ls[2]
-                characters = char_split(code)
-                ch = 0
-                for char in characters:
-                    ch += 1
-                    if char == ")":
-                        break
-                code = code[0:ch]
-                code_dict[code] = i
+    if stats.empty:
+        for i in range(len(stats)):
+            ls = stats.loc[i].values.tolist()
+            if isinstance(ls[0], str):
+                ls = ls[0].split()
+                if ls[0] == "Summary":
+                    code = ls[2]
+                    characters = char_split(code)
+                    ch = 0
+                    for char in characters:
+                        ch += 1
+                        if char == ")":
+                            break
+                    code = code[0:ch]
+                    code_dict[code] = i
     return code_dict
 
-
-codex = generate_codex(data)
+codex = generate_codex(statistics_file)
 
 
 def get_summary(code):
@@ -127,6 +127,8 @@ def get_data(code):
 class Question:
     code = ""
     summary = ""
+    include = []
+    description = ""
     question = ""
     subquestion = ""
     question_headers = ""
@@ -134,7 +136,7 @@ class Question:
     counts = []
     stats = []
     error = ""
-    data = pd.DataFrame.empty
+    data = pd.DataFrame()
 
     def __init__(self, code):
         try:
@@ -170,11 +172,34 @@ class Question:
             self.stats = get_data(code)
         except Exception as e:
             self.error = e
-        self.build_dataframe()
+        if code == 'TEST':
+            self._init_test_question()
+        self._build_dataframe()
 
-    def build_dataframe(self):
+    def _build_dataframe(self):
         df = pd.DataFrame(columns=self.question_headers)
+        df['Answers'] = self.possible_answers
+        df['Counts'] = self.counts
+        df['Stats'] = self.stats
         self.data = df
+
+    def _init_test_question(self):
+        self.code = 'TEST'
+        self.question_headers = ['Answers', 'Counts', 'Stats']
+        self.possible_answers = ['Strongly disagree',
+                                 'Disagree',
+                                 'Somewhat disagree',
+                                 'Neither agree nor disagree',
+                                 'Somewhat agree',
+                                 'Agree',
+                                 'Strongly agree',
+                                 'Not applicable',
+                                 'No answer']
+        self.summary = "Summary of test question."
+        self.question = 'How much do you agree with the test question?'
+        self.counts = [0, 5, 6, 3, 4, 4, 6, 2, 1]
+        sum_counts = sum(self.counts)
+        self.stats = [round(i/sum_counts, 1) for i in self.counts]
 
 
 def get_all_statistics():

@@ -15,15 +15,17 @@ from mhw.scoring import get_value_dict, get_scored_data
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
 from mhw.figures import make_histo
-from mhw.include_arrays import include_all, subtract_include
+
 from mhw.figures import plot_impact_statistics
-from mhw.include_arrays import inc_under, inc_grad
+
 from mhw.scoring import get_value_dict
 from mhw.read_statistics import get_possible_answers, get_all_statistics, Question
 
 results = get_results()
 questions = get_all_statistics()
-
+if not results.empty:
+    from mhw.include_arrays import *
+    from mhw.include_arrays import subtract_include
 
 def _get_academic_impact(resp_id):
     resp_id = int(resp_id)
@@ -357,16 +359,14 @@ class QuestionInclude(Question):
             self.stats.append(count / len(responses))
 
 if __name__ == "__main__":
-    ae7 = QuestionInclude('AE7', include=inc_under, description="Undergraduates")
+    test = Question('TEST')
     print_table = True
     if print_table:
         print("********************************************************************")
-        print("Question code: {}".format(ae7.code))
-        print("Top question text: {}".format(ae7.question))
-        print("Inclusion criteria: {}".format(ae7.description))
-        print("Respondents fitting inclusion criteria: {}".format(len(ae7.include)))
+        print("Question code: {}".format(test.code))
+        print("Top question text: {}".format(test.question))
+        print("Inclusion criteria: {}".format(test.description))
+        print("Respondents fitting inclusion criteria: {}".format(len(test.include)))
         print("Sample size: {}".format(all_respondents))
-        print('\t'.join(ae7.question_headers))
-        for i, ans in enumerate(ae7.possible_answers):
-            print(ans, "\t", ae7.counts[i], "\t", ae7.stats[i])
+        print(test.data.to_csv())
         print("********************************************************************")

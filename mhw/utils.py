@@ -78,8 +78,8 @@ def mean(data):
         return data[0]
     if not data:
         return None
-    mean = np.mean(data)
-    return mean
+    avg = np.mean(data)
+    return avg
 
 
 # finite population correction

@@ -12,7 +12,7 @@ import pandas as pd
 # Read the results and stats files into a python pandas dataframe
 try:
     results_file = pd.read_excel(r"C:\Users\burkeds\Documents\git\mhwpy\working\results\results-survey265235_2023.xls",
-                                header=0, skiprows=[1], index_col=0)
+                                 header=0, skiprows=[1], index_col=0)
 except FileNotFoundError as _:
     results_file = pd.DataFrame()
 try:

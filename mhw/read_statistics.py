@@ -8,6 +8,8 @@ This version of the code requires the statistics file but these data could
 be obtained from the results file in future versions.
 """
 from mhw.config import statistics_file
+from mhw.include_arrays import include_all
+from mhw.read_results import get_included_responses
 import pandas as pd
 from mhw.utils import char_split, merge
 
@@ -17,6 +19,8 @@ from mhw.utils import char_split, merge
 def generate_codex(stats):
     code_dict = {}
     if stats.empty:
+        return code_dict
+    else:
         for i in range(len(stats)):
             ls = stats.loc[i].values.tolist()
             if isinstance(ls[0], str):
@@ -33,24 +37,25 @@ def generate_codex(stats):
                     code_dict[code] = i
     return code_dict
 
+
 codex = generate_codex(statistics_file)
 
 
 def get_summary(code):
     row = codex[code]
-    ls = data.loc[row].values.tolist()
+    ls = statistics_file.loc[row].values.tolist()
     return ls[0]
 
 
 def get_top_question(code):
     row = codex[code]
-    ls = data.loc[row+1].values.tolist()
+    ls = statistics_file.loc[row+1].values.tolist()
     return ls[0]
 
 
 def get_subquestion(code):
     row = codex[code]
-    ls = data.loc[row].values.tolist()
+    ls = statistics_file.loc[row].values.tolist()
     subq = ""
     while True:
         ls_check = ls[0].split()
@@ -68,7 +73,7 @@ def get_subquestion(code):
 
 def get_question_headers(code):
     row = codex[code]
-    ls = data.loc[row+2].values.tolist()
+    ls = statistics_file.loc[row+2].values.tolist()
     return ls[0:3] 
 
 
@@ -77,7 +82,7 @@ def get_possible_answers(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = data.loc[row].values.tolist()
+        ls = statistics_file.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             subq.append(ls[0])
 
@@ -99,7 +104,7 @@ def get_counts(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = data.loc[row].values.tolist()
+        ls = statistics_file.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             counts.append(ls[1])
         else:
@@ -113,7 +118,7 @@ def get_data(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = data.loc[row].values.tolist()
+        ls = statistics_file.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             perc.append(ls[2])
         else:
@@ -122,6 +127,14 @@ def get_data(code):
         perc[index] = round(dat*100, 1)        
     qdata = perc
     return qdata
+
+
+def _get_number_of_nan_in_list(ls):
+    number_of_nan = 0
+    for item in ls:
+        if pd.isna(item):
+            number_of_nan += 1
+    return number_of_nan
 
 
 class Question:
@@ -138,7 +151,7 @@ class Question:
     error = ""
     data = pd.DataFrame()
 
-    def __init__(self, code):
+    def __init__(self, code, include=include_all, description=""):
         try:
             _ = codex[code]
             self.code = code
@@ -146,6 +159,14 @@ class Question:
             self.error = "KeyError: {}".format(e)
         try:
             self.summary = get_summary(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.include = include
+        except Exception as e:
+            self.error = e
+        try:
+            self.description = description
         except Exception as e:
             self.error = e
         try:
@@ -164,24 +185,47 @@ class Question:
             self.possible_answers = get_possible_answers(code)
         except Exception as e:
             self.error = e
-        try:
-            self.counts = get_counts(code)
-        except Exception as e:
-            self.error = e
-        try:
-            self.stats = get_data(code)
-        except Exception as e:
-            self.error = e
+        self._populate_data()
         if code == 'TEST':
             self._init_test_question()
         self._build_dataframe()
 
     def _build_dataframe(self):
         df = pd.DataFrame(columns=self.question_headers)
-        df['Answers'] = self.possible_answers
-        df['Counts'] = self.counts
-        df['Stats'] = self.stats
+        df['Answer'] = self.possible_answers
+        df['Count'] = self.counts
+        df['Percentage'] = self.stats
         self.data = df
+
+    def _populate_data(self):
+        if self.include == include_all:
+            try:
+                self.counts = get_counts(self.code)
+            except Exception as e:
+                self.error = e
+            try:
+                self.stats = get_data(self.code)
+            except Exception as e:
+                self.error = e
+        else:
+            try:
+                included_responses = get_included_responses(self.code, self.include)
+                counts = {}
+                percentages = {}
+                for answer in self.possible_answers:
+                    if answer == "Not completed or Not displayed":
+                        counts[answer] = None
+                        percentages[answer] = None
+                        continue
+                    counts[answer] = included_responses.count(answer)
+                    percentages[answer] = round(counts[answer]/len(included_responses) * 100, 1)
+                number_of_nan = _get_number_of_nan_in_list(included_responses)
+                counts['No answer'] = number_of_nan
+                percentages['No answer'] = round(number_of_nan/len(included_responses) * 100, 1)
+                self.counts = counts.values()
+                self.stats = percentages.values()
+            except Exception as e:
+                self.error = e
 
     def _init_test_question(self):
         self.code = 'TEST'

@@ -11,21 +11,17 @@ import numpy as np
 from textwrap import wrap
 from mhw.config import zscore, pop, all_respondents
 from mhw.read_results import get_included_responses, get_results
-from mhw.scoring import get_value_dict, get_scored_data
+from mhw.scoring import get_scored_data, get_value_dict
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
-from mhw.read_statistics import get_subquestion, get_possible_answers, get_top_question
-from mhw.figures import make_histo
-
-from mhw.figures import plot_impact_statistics
-
-from mhw.scoring import get_value_dict
-from mhw.read_statistics import get_possible_answers, get_all_statistics, Question
+from mhw.figures import make_histo, plot_impact_statistics
+from mhw.read_statistics import get_all_statistics, Question, get_subquestion
 
 results = get_results()
 questions = get_all_statistics()
 if not results.empty:
     from mhw.include_arrays import *
     from mhw.include_arrays import subtract_include
+
 
 def _get_academic_impact(resp_id):
     resp_id = int(resp_id)
@@ -328,9 +324,9 @@ def ae6(include, description="", include_other=None, print_table=False):
                "non-P&A",
                "students",
                "not academic"]
-    xlabels = ['\n'.join(wrap(l, 20)) for l in xlabels]
+    xlabels = ['\n'.join(wrap(label, 20)) for label in xlabels]
     ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
-    ylabels = ['\n'.join(wrap(l, 10)) for l in ylabels]
+    ylabels = ['\n'.join(wrap(label, 10)) for label in ylabels]
     plot_impact_statistics(impact_stats,
                            complement=False,
                            title=title,
@@ -357,16 +353,3 @@ class QuestionInclude(Question):
             count = responses.count(ans)
             self.counts.append(count)
             self.stats.append(count / len(responses))
-
-if __name__ == "__main__":
-    test = Question('TEST')
-    print_table = True
-    if print_table:
-        print("********************************************************************")
-        print("Question code: {}".format(test.code))
-        print("Top question text: {}".format(test.question))
-        print("Inclusion criteria: {}".format(test.description))
-        print("Respondents fitting inclusion criteria: {}".format(len(test.include)))
-        print("Sample size: {}".format(all_respondents))
-        print(test.data.to_csv())
-        print("********************************************************************")

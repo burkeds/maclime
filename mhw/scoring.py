@@ -4,6 +4,7 @@ Created on May 18, 2022
 @author: Devin Burke
 """
 
+
 # Store dictionaries that map responses to arbitrary
 # numerical values valid for a list of questions.
 def get_value_dict(code):

@@ -424,6 +424,3 @@ def ae6(include, description="", include_other=None, print_table=False):
                            x_labels=xlabels,
                            y_labels=ylabels)
     return impact_stats
-
-if __name__ == "__main__":
-    ae7 = Question('AE7')

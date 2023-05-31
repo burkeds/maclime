@@ -7,13 +7,8 @@ Created on May 18, 2022
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-from matplotlib.ticker import AutoMinorLocator
-from textwrap import wrap
-import pandas as pd
-import numpy as np
+import textwrap
 import math
-from mhw.utils import get_confidence_interval, standard_error, fpc, func, mean
-from mhw.config import pop, zscore
 from mhw.read_statistics import get_possible_answers
 from mhw.scoring import get_value_dict
 from mhw.read_results import get_included_responses
@@ -107,7 +102,7 @@ def plot_impact_statistics(impact_statistics,
             y_labels = get_possible_answers(code)
             bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
             y_labels = [label for label in y_labels if label not in bad_labels]
-            y_labels = ['\n'.join(wrap(label, 10)) for label in y_labels]
+            y_labels = ['\n'.join(textwrap.wrap(label, 10)) for label in y_labels]
 
     # Add valid respondents to x_label
     for i, label in enumerate(x_labels):
@@ -138,3 +133,42 @@ def plot_impact_statistics(impact_statistics,
         ax.set_ylim([low_y, high_y])
         ax.tick_params(direction='in')
         plt.show()
+
+
+def create_pie_chart(answers, frequencies, title=None, subtitle=None):
+    """
+    Create a pie chart with labels, percentages, title, and subtitle.
+    :param answers: list of strings
+    :param frequencies: list of ints
+    :param title: Title string
+    :param subtitle: Subtitle string
+    :return:
+    """
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Create the pie chart
+    wedges, labels, autopct_text = ax.pie(frequencies, autopct='%1.1f%%', startangle=90)
+
+    # Set aspect ratio to be equal so that pie is drawn as a circle
+    ax.axis('equal')
+
+    # Set the title of the chart
+    if title:
+        ax.set_title(title)
+
+    # Wrap the subtitle text if it exceeds the chart width
+    if subtitle:
+        wrapped_subtitle = textwrap.fill(subtitle, len(answers) * 10)
+        ax.text(0.5, 0.95, wrapped_subtitle, transform=ax.transAxes, ha='center')
+
+    # Create a legend
+    ax.legend(wedges, answers, loc="center left", bbox_to_anchor=(0.85, 0.5))
+
+    # Add percentage labels inside each slice
+    for i, label in enumerate(autopct_text):
+        if frequencies[i] != 0:
+            label.set_text(f"{label.get_text()}%")
+
+    # Show the pie chart
+    plt.show()

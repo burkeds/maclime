@@ -21,6 +21,14 @@ from mhw.scoring import get_scored_data
 
 
 def make_histo(frame, title, description, complementary=False):
+    """
+    Makes a histogram of the data in the given frame.
+    :param frame:
+    :param title:
+    :param description:
+    :param complementary:
+    :return:
+    """
     plt.clf()
     sample = frame.attrs['sample_size']
     if complementary:
@@ -57,6 +65,16 @@ def plot_impact_statistics(impact_statistics,
                            x_labels=None,
                            y_labels=None,
                            include_sample_size=True):
+    """
+    Plots the impact statistics for the given question.
+    :param impact_statistics:
+    :param complement:
+    :param title:
+    :param x_labels:
+    :param y_labels:
+    :param include_sample_size:
+    :return:
+    """
     plt.clf()
     df = impact_statistics
     code = df.index[0]

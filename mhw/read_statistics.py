@@ -17,6 +17,12 @@ from mhw.utils import char_split, merge
 
 
 def generate_codex(stats):
+    """
+    Generates a dictionary of the codes and their row numbers in the statistics file.
+
+    :param stats: A pandas dataframe of the statistics file
+    :return:
+    """
     code_dict = {}
     if stats.empty:
         return code_dict
@@ -42,18 +48,33 @@ codex = generate_codex(statistics_file)
 
 
 def get_summary(code):
+    """
+    Returns the summary of the question with the given code.
+    :param code: The question code
+    :return:
+    """
     row = codex[code]
     ls = statistics_file.loc[row].values.tolist()
     return ls[0]
 
 
 def get_top_question(code):
+    """
+    Returns the top question of the question with the given code.
+    :param code: The question code
+    :return:
+    """
     row = codex[code]
     ls = statistics_file.loc[row+1].values.tolist()
     return ls[0]
 
 
 def get_subquestion(code):
+    """
+    Returns the subquestion of the question with the given code.
+    :param code: The question code
+    :return:
+    """
     row = codex[code]
     ls = statistics_file.loc[row].values.tolist()
     subq = ""
@@ -72,12 +93,22 @@ def get_subquestion(code):
 
 
 def get_question_headers(code):
+    """
+    Returns the question headers of the question with the given code.
+    :param code: The question code
+    :return:
+    """
     row = codex[code]
     ls = statistics_file.loc[row+2].values.tolist()
     return ls[0:3] 
 
 
 def get_possible_answers(code):
+    """
+    Returns the possible answers of the question with the given code.
+    :param code: The question code
+    :return:
+    """
     subq = []
     row = codex[code] + 2
     while row > 0:
@@ -100,6 +131,11 @@ def get_possible_answers(code):
 
 
 def get_counts(code):
+    """
+    Returns the frequency of each answer for a question with the given code.
+    :param code: The question code
+    :return:
+    """
     counts = []
     row = codex[code] + 2
     while row > 0:
@@ -114,6 +150,11 @@ def get_counts(code):
 
 
 def get_data(code):
+    """
+    Returns the dataframe for a question with the given code.
+    :param code:
+    :return:
+    """
     perc = []
     row = codex[code] + 2
     while row > 0:
@@ -130,6 +171,11 @@ def get_data(code):
 
 
 def _get_number_of_nan_in_list(ls):
+    """
+    Returns the number of nan values in a list.
+    :param ls: A list
+    :return:
+    """
     number_of_nan = 0
     for item in ls:
         if pd.isna(item):
@@ -138,6 +184,24 @@ def _get_number_of_nan_in_list(ls):
 
 
 class Question:
+    """
+    This class will be used to store the data for each question.
+
+    Attributes:
+        code (str): The code for the question.
+        summary (str): The summary of the question.
+        include (list): The list of responses to include.
+        description (str): The description of the question.
+        question (str): The question.
+        subquestion (str): The subquestion if applicable.
+        question_headers (list): The headers for the question.
+        possible_answers (list): The possible answers for the question.
+        counts (list): The counts for each possible answer.
+        stats (list): The percentages for each possible answer.
+        error (str): Exceptions raised while instantiating object.
+        data (DataFrame): The data for the question.
+
+    """
     code = ""
     summary = ""
     include = []
@@ -191,6 +255,10 @@ class Question:
         self._build_dataframe()
 
     def _build_dataframe(self):
+        """
+        Builds the dataframe for the question.
+        :return:
+        """
         df = pd.DataFrame(columns=self.question_headers)
         df['Answer'] = self.possible_answers
         df['Count'] = self.counts
@@ -198,6 +266,10 @@ class Question:
         self.data = df
 
     def _populate_data(self):
+        """
+        Populates the counts and stats attributes.
+        :return:
+        """
         if self.include == include_all:
             try:
                 self.counts = get_counts(self.code)
@@ -228,6 +300,10 @@ class Question:
                 self.error = e
 
     def _init_test_question(self):
+        """
+        Initializes the test question.
+        :return:
+        """
         self.code = 'TEST'
         self.question_headers = ['Answers', 'Counts', 'Stats']
         self.possible_answers = ['Strongly disagree',
@@ -246,7 +322,11 @@ class Question:
         self.stats = [round(i/sum_counts, 1) for i in self.counts]
 
 
-def get_all_statistics():
+def get_all_questions():
+    """
+    Returns a dictionary of all questions.
+    :return:
+    """
     all_stats = {}
     all_codes = list(codex.keys())
     for code in all_codes:

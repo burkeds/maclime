@@ -8,6 +8,11 @@ Created on May 18, 2022
 # Store dictionaries that map responses to arbitrary
 # numerical values valid for a list of questions.
 def get_value_dict(code):
+    """
+    Returns a dictionary that maps responses to arbitrary numerical values for a given question code.
+    :param code:
+    :return:
+    """
     agree_list = ['AE1(SQ001)',
                   'AE1(SQ001)',
                   'AE1(SQ002)',
@@ -104,6 +109,12 @@ def get_value_dict(code):
 
 # An array of responses passed returns an array of scored values using value_dict
 def get_scored_data(code, responses):
+    """
+    Returns an array of scored values for a given question code and array of responses.
+    :param code:
+    :param responses:
+    :return:
+    """
     value_dict = get_value_dict(code)
     scores = []
     for response in responses:

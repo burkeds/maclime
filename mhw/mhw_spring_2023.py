@@ -14,16 +14,21 @@ from mhw.read_results import get_included_responses, get_results
 from mhw.scoring import get_scored_data, get_value_dict
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.figures import make_histo, plot_impact_statistics
-from mhw.read_statistics import get_all_statistics, Question, get_subquestion
+from mhw.read_statistics import get_all_questions, Question, get_subquestion
 
 results = get_results()
-questions = get_all_statistics()
+questions = get_all_questions()
 if not results.empty:
     from mhw.include_arrays import *
     from mhw.include_arrays import subtract_include
 
 
 def _get_academic_impact(resp_id):
+    """
+    Gets the academic impact score for the given respondent.
+    :param resp_id:
+    :return:
+    """
     resp_id = int(resp_id)
     impact_codes = ['AE6(SQ001)',
                     'AE6(SQ002)',
@@ -50,6 +55,15 @@ def _get_academic_impact(resp_id):
 
 
 def _get_stats_comparison(*args, include=None, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the given questions and subquestions.
+    :param args: Any number of question codes or subquestion codes.
+    :param include: An include array.
+    :param description: Description of inclusion criteria.
+    :param include_other: Another include array for comparison.
+    :param print_table: When true, prints the table to the console.
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -141,6 +155,14 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
 
 
 def mh2(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the mental health continuum.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     codes = ['MH2']
     include_comp = include_other
     if not include_comp:
@@ -156,6 +178,14 @@ def mh2(include, description="", include_other=None, print_table=False):
 
 
 def ae0(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the social perception.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -176,6 +206,14 @@ def ae0(include, description="", include_other=None, print_table=False):
 
 
 def ae1(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the department perception.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -195,6 +233,14 @@ def ae1(include, description="", include_other=None, print_table=False):
 
 
 def ae2(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the graduate student workload.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -216,6 +262,14 @@ def ae2(include, description="", include_other=None, print_table=False):
 
 
 def ae21(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the TA workload.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -236,6 +290,14 @@ def ae21(include, description="", include_other=None, print_table=False):
 
 
 def ae3(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the undergraduate workload.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -256,6 +318,14 @@ def ae3(include, description="", include_other=None, print_table=False):
 
 
 def ae4(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the co-op workload.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -276,6 +346,14 @@ def ae4(include, description="", include_other=None, print_table=False):
 
 
 def ae5(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the undergraduate thesis experience.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -295,6 +373,14 @@ def ae5(include, description="", include_other=None, print_table=False):
 
 
 def ae6(include, description="", include_other=None, print_table=False):
+    """
+    Gets the statistics for the impact of academics on wellness.
+    :param include:
+    :param description:
+    :param include_other:
+    :param print_table:
+    :return:
+    """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(include_all, include)
@@ -339,17 +425,5 @@ def ae6(include, description="", include_other=None, print_table=False):
                            y_labels=ylabels)
     return impact_stats
 
-
-class QuestionInclude(Question):
-    def __init__(self, code, include=None, description=""):
-        super().__init__(code)
-        if not include:
-            raise Exception("You must specify inclusion criteria with an include array of respondent IDs.")
-        else:
-            self.include = include
-        self.description = description
-        responses = get_included_responses(code, include)
-        for ans in self.possible_answers:
-            count = responses.count(ans)
-            self.counts.append(count)
-            self.stats.append(count / len(responses))
+if __name__ == "__main__":
+    ae7 = Question('AE7')

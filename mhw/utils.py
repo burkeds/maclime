@@ -13,10 +13,20 @@ from scipy.stats import mannwhitneyu
 
 
 def char_split(word):
+    """
+    Splits a string into a list of characters.
+    :param word:
+    :return:
+    """
     return [char for char in word]
 
 
 def merge(s):
+    """
+    Merges a list of characters into a string.
+    :param s:
+    :return:
+    """
     new = ""
     for x in s:
         new += x
@@ -24,12 +34,23 @@ def merge(s):
 
 
 def func(pct, allvals):
+    """
+    Returns a string for the pie chart labels.
+    :param pct:
+    :param allvals:
+    :return:
+    """
     absolute = int(np.round(pct/100.*np.sum(allvals)))
     return "{:.1f}%\n({:d})".format(pct, absolute)
 
 
 # Returns the median and lower/upper limits of the median confidence interval
 def get_confidence_interval(data):
+    """
+    Returns the median and lower/upper limits of the median confidence interval.
+    :param data:
+    :return:
+    """
     data = [i for i in data if not pd.isna(i)]
     if not data:
         return None, None, None
@@ -50,6 +71,13 @@ def get_confidence_interval(data):
 
 #  True if the median or confidence interval have type None or are nan
 def conf_check(lconf, median, hconf):
+    """
+    Returns True if the median or confidence interval have type None or are nan.
+    :param lconf:
+    :param median:
+    :param hconf:
+    :return:
+    """
     if pd.isna(lconf):
         return True
     elif pd.isna(median):
@@ -61,6 +89,11 @@ def conf_check(lconf, median, hconf):
 
 # Returns the standard error of an array
 def standard_error(sample):
+    """
+    Returns the standard error of an array.
+    :param sample:
+    :return:
+    """
     sample = [i for i in sample if not pd.isna(i)]
     if not sample:
         return None
@@ -73,6 +106,11 @@ def standard_error(sample):
 
 
 def mean(data):
+    """
+    Returns the mean of an array.
+    :param data:
+    :return:
+    """
     data = [i for i in data if not pd.isna(i)]
     if len(data) == 1:
         return data[0]
@@ -85,6 +123,12 @@ def mean(data):
 # finite population correction
 # Use when n/N > 0.05
 def fpc(N, n):
+    """
+    finite population correction
+    :param N:
+    :param n:
+    :return:
+    """
     cor = N-n
     cor = cor/(N-1)
     cor = math.sqrt(cor)
@@ -93,6 +137,12 @@ def fpc(N, n):
 
 # Perform MannWhitneyU test for two datasets and return pvalue
 def mwu_test(data, comp):
+    """
+    Perform MannWhitneyU test for two datasets and return pvalue.
+    :param data:
+    :param comp:
+    :return:
+    """
     data = [i for i in data if not pd.isna(i)]
     if not data:
         return None
@@ -107,6 +157,12 @@ def mwu_test(data, comp):
 
 
 def add(x, y):
+    """
+    Adds two values together.
+    :param x:
+    :param y:
+    :return:
+    """
     if pd.isna(x):
         return y
     elif pd.isna(y):

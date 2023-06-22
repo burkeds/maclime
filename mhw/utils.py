@@ -15,8 +15,8 @@ from scipy.stats import mannwhitneyu
 def char_split(word):
     """
     Splits a string into a list of characters.
-    :param word:
-    :return:
+    :param word: The string
+    :return: A list of characters
     """
     return [char for char in word]
 
@@ -24,8 +24,8 @@ def char_split(word):
 def merge(s):
     """
     Merges a list of characters into a string.
-    :param s:
-    :return:
+    :param s: The list of characters
+    :return: The string
     """
     new = ""
     for x in s:
@@ -33,23 +33,12 @@ def merge(s):
     return new
 
 
-def func(pct, allvals):
-    """
-    Returns a string for the pie chart labels.
-    :param pct:
-    :param allvals:
-    :return:
-    """
-    absolute = int(np.round(pct/100.*np.sum(allvals)))
-    return "{:.1f}%\n({:d})".format(pct, absolute)
-
-
 # Returns the median and lower/upper limits of the median confidence interval
 def get_confidence_interval(data):
     """
     Returns the median and lower/upper limits of the median confidence interval.
-    :param data:
-    :return:
+    :param data: The data
+    :return: The median and lower/upper limits of the median confidence interval
     """
     data = [i for i in data if not pd.isna(i)]
     if not data:
@@ -69,30 +58,12 @@ def get_confidence_interval(data):
     return lconf, median, hconf
 
 
-#  True if the median or confidence interval have type None or are nan
-def conf_check(lconf, median, hconf):
-    """
-    Returns True if the median or confidence interval have type None or are nan.
-    :param lconf:
-    :param median:
-    :param hconf:
-    :return:
-    """
-    if pd.isna(lconf):
-        return True
-    elif pd.isna(median):
-        return True
-    elif pd.isna(hconf):
-        return True
-    return False
-
-
 # Returns the standard error of an array
 def standard_error(sample):
     """
     Returns the standard error of an array.
-    :param sample:
-    :return:
+    :param sample: The array
+    :return: The standard error
     """
     sample = [i for i in sample if not pd.isna(i)]
     if not sample:
@@ -105,29 +76,14 @@ def standard_error(sample):
     return se
 
 
-def mean(data):
-    """
-    Returns the mean of an array.
-    :param data:
-    :return:
-    """
-    data = [i for i in data if not pd.isna(i)]
-    if len(data) == 1:
-        return data[0]
-    if not data:
-        return None
-    avg = np.mean(data)
-    return avg
-
-
 # finite population correction
 # Use when n/N > 0.05
 def fpc(N, n):
     """
     finite population correction
-    :param N:
-    :param n:
-    :return:
+    :param N: Population size
+    :param n: Sample size
+    :return: finite population correction
     """
     cor = N-n
     cor = cor/(N-1)
@@ -139,9 +95,9 @@ def fpc(N, n):
 def mwu_test(data, comp):
     """
     Perform MannWhitneyU test for two datasets and return pvalue.
-    :param data:
-    :param comp:
-    :return:
+    :param data: The data
+    :param comp: The comparison data
+    :return: The p-value
     """
     data = [i for i in data if not pd.isna(i)]
     if not data:
@@ -154,20 +110,3 @@ def mwu_test(data, comp):
     else:
         pval = mannwhitneyu(data, comp).pvalue
     return pval
-
-
-def add(x, y):
-    """
-    Adds two values together.
-    :param x:
-    :param y:
-    :return:
-    """
-    if pd.isna(x):
-        return y
-    elif pd.isna(y):
-        return x
-    elif pd.isna(x) and pd.isna(y):
-        return None
-    else:
-        return x + y

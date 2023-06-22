@@ -46,9 +46,9 @@ __all__ = ['include_all',
 def get_include_array(code, response):
     """
     Returns a list of respondent IDs that have the specified response to the specified question code.
-    :param code:
-    :param response:
-    :return:
+    :param code: The question code
+    :param response: The response
+    :return: A list of respondent IDs
     """
     f_results = results[results[code] == response]
     return f_results.index.tolist()
@@ -58,9 +58,9 @@ def get_include_array(code, response):
 def combine_include(*args, logic='OR'):
     """
     Combines include arrays using AND or OR logic.
-    :param args:
-    :param logic:
-    :return:
+    :param args: The include arrays to be combined
+    :param logic: The logic to be used. AND or OR
+    :return: A list of respondent IDs
     """
     x = args[0].copy()
     for i, inc in enumerate(args):
@@ -81,8 +81,8 @@ def combine_include(*args, logic='OR'):
 def subtract_include(*args):
     """
     Subtracts include arrays from each other.
-    :param args:
-    :return:
+    :param args: The include arrays to be subtracted
+    :return: A list of respondent IDs
     """
     new_include = args[0].copy()
     for i, inc in enumerate(args):

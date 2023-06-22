@@ -15,13 +15,14 @@ from mhw.read_results import get_included_responses
 from mhw.scoring import get_scored_data
 
 
-def make_histo(frame, title, description, complementary=False):
+def make_histo(frame, title, description, complementary=False, save_figure=False):
     """
     Makes a histogram of the data in the given frame.
-    :param frame:
-    :param title:
-    :param description:
-    :param complementary:
+    :param frame: The frame to be plotted
+    :param title: The title of the plot
+    :param description: The description of the plot
+    :param complementary: Whether to use the complementary scores
+    :param save_figure: Whether to save the figure
     :return:
     """
     plt.clf()
@@ -49,9 +50,9 @@ def make_histo(frame, title, description, complementary=False):
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     for i in range(len(N)):
         patches[i].set_facecolor(color[i])
-    # plt.savefig(title + "_" + desc + ".png")
+    if save_figure:
+        plt.savefig(title + "_" + description + ".png")
     plt.show()
-    # plt.close()
 
 
 def plot_impact_statistics(impact_statistics,
@@ -59,15 +60,17 @@ def plot_impact_statistics(impact_statistics,
                            title="",
                            x_labels=None,
                            y_labels=None,
-                           include_sample_size=True):
+                           include_sample_size=True,
+                           save_figure=False):
     """
     Plots the impact statistics for the given question.
-    :param impact_statistics:
-    :param complement:
-    :param title:
-    :param x_labels:
-    :param y_labels:
-    :param include_sample_size:
+    :param impact_statistics: The impact statistics for the question
+    :param complement: Whether to plot the complementary statistics
+    :param title: The title of the plot
+    :param x_labels: The labels for the x-axis
+    :param y_labels: The labels for the y-axis
+    :param include_sample_size: Whether to include the sample size in the title
+    :param save_figure: Whether to save the figure
     :return:
     """
     plt.clf()
@@ -132,16 +135,19 @@ def plot_impact_statistics(impact_statistics,
         ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
         ax.set_ylim([low_y, high_y])
         ax.tick_params(direction='in')
+        if save_figure:
+            plt.savefig(title + ".png")
         plt.show()
 
 
-def create_pie_chart(answers, frequencies, title=None, subtitle=None):
+def create_pie_chart(answers, frequencies, title=None, subtitle=None, save_figure=False):
     """
     Create a pie chart with labels, percentages, title, and subtitle.
     :param answers: list of strings
     :param frequencies: list of ints
     :param title: Title string
     :param subtitle: Subtitle string
+    :param save_figure: Whether to save the figure
     :return:
     """
     # Create a figure and axis
@@ -170,5 +176,7 @@ def create_pie_chart(answers, frequencies, title=None, subtitle=None):
         if frequencies[i] != 0:
             label.set_text(f"{label.get_text()}%")
 
-    # Show the pie chart
+    # Show the pie char
+    if save_figure:
+        plt.savefig(title + ".png")
     plt.show()

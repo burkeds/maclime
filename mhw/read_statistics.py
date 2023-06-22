@@ -21,7 +21,7 @@ def generate_codex(stats):
     Generates a dictionary of the codes and their row numbers in the statistics file.
 
     :param stats: A pandas dataframe of the statistics file
-    :return:
+    :return: A dictionary of the codes and their row numbers
     """
     code_dict = {}
     if stats.empty:
@@ -51,7 +51,7 @@ def get_summary(code):
     """
     Returns the summary of the question with the given code.
     :param code: The question code
-    :return:
+    :return: The summary
     """
     row = codex[code]
     ls = statistics_file.loc[row].values.tolist()
@@ -62,7 +62,7 @@ def get_top_question(code):
     """
     Returns the top question of the question with the given code.
     :param code: The question code
-    :return:
+    :return: The top question
     """
     row = codex[code]
     ls = statistics_file.loc[row+1].values.tolist()
@@ -73,7 +73,7 @@ def get_subquestion(code):
     """
     Returns the subquestion of the question with the given code.
     :param code: The question code
-    :return:
+    :return: The subquestion
     """
     row = codex[code]
     ls = statistics_file.loc[row].values.tolist()
@@ -96,7 +96,7 @@ def get_question_headers(code):
     """
     Returns the question headers of the question with the given code.
     :param code: The question code
-    :return:
+    :return: The question headers
     """
     row = codex[code]
     ls = statistics_file.loc[row+2].values.tolist()
@@ -107,7 +107,7 @@ def get_possible_answers(code):
     """
     Returns the possible answers of the question with the given code.
     :param code: The question code
-    :return:
+    :return: The possible answers
     """
     subq = []
     row = codex[code] + 2
@@ -134,7 +134,7 @@ def get_counts(code):
     """
     Returns the frequency of each answer for a question with the given code.
     :param code: The question code
-    :return:
+    :return: The counts
     """
     counts = []
     row = codex[code] + 2
@@ -152,8 +152,8 @@ def get_counts(code):
 def get_data(code):
     """
     Returns the dataframe for a question with the given code.
-    :param code:
-    :return:
+    :param code: The question code
+    :return: The dataframe
     """
     perc = []
     row = codex[code] + 2
@@ -174,7 +174,7 @@ def _get_number_of_nan_in_list(ls):
     """
     Returns the number of nan values in a list.
     :param ls: A list
-    :return:
+    :return: The number of nan values
     """
     number_of_nan = 0
     for item in ls:

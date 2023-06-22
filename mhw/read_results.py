@@ -14,8 +14,8 @@ import pandas as pd
 def get_all_responses(code):
     """
     Returns a list of all responses for a given question code.
-    :param code:
-    :return:
+    :param code: The question code
+    :return: A list of responses
     """
     keys = results.index.tolist()
     values = results[code].values.tolist()
@@ -26,9 +26,9 @@ def get_all_responses(code):
 def get_single_response(code, resp_id):
     """
     Returns a single response for a given question code and respondent ID.
-    :param code:
-    :param resp_id:
-    :return:
+    :param code: The question code
+    :param resp_id: The respondent ID
+    :return: A single response
     """
     response_id = int(resp_id)
     response = results.loc[response_id, code]
@@ -42,9 +42,9 @@ def get_single_response(code, resp_id):
 def get_included_responses(code, include):
     """
     Returns a list of responses for a given question code and include array.
-    :param code:
-    :param include:
-    :return:
+    :param code: The question code
+    :param include: The include array
+    :return: A list of responses
     """
     return results[code][include].to_list()
 
@@ -52,6 +52,6 @@ def get_included_responses(code, include):
 def get_results():
     """
     Returns the results dataframe.
-    :return:
+    :return: The results dataframe
     """
     return results

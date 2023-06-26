@@ -7,11 +7,14 @@ This file will allow you to read from the limesurvey statistics output file.
 This version of the code requires the statistics file but these data could
 be obtained from the results file in future versions.
 """
-from mhw.config import statistics_file
 from mhw.include_arrays import include_all
 from mhw.read_results import get_included_responses
 import pandas as pd
 from mhw.utils import char_split, merge
+
+from mhw.config import get_config
+CONFIG = get_config()
+STATISTICS = CONFIG.get_statistics_file()
 
 # data = statistics_file
 
@@ -44,7 +47,7 @@ def generate_codex(stats):
     return code_dict
 
 
-codex = generate_codex(statistics_file)
+codex = generate_codex(STATISTICS)
 
 
 def get_summary(code):
@@ -54,7 +57,7 @@ def get_summary(code):
     :return: The summary
     """
     row = codex[code]
-    ls = statistics_file.loc[row].values.tolist()
+    ls = STATISTICS.loc[row].values.tolist()
     return ls[0]
 
 
@@ -65,7 +68,7 @@ def get_top_question(code):
     :return: The top question
     """
     row = codex[code]
-    ls = statistics_file.loc[row+1].values.tolist()
+    ls = STATISTICS.loc[row + 1].values.tolist()
     return ls[0]
 
 
@@ -76,7 +79,7 @@ def get_subquestion(code):
     :return: The subquestion
     """
     row = codex[code]
-    ls = statistics_file.loc[row].values.tolist()
+    ls = STATISTICS.loc[row].values.tolist()
     subq = ""
     while True:
         ls_check = ls[0].split()
@@ -99,7 +102,7 @@ def get_question_headers(code):
     :return: The question headers
     """
     row = codex[code]
-    ls = statistics_file.loc[row+2].values.tolist()
+    ls = STATISTICS.loc[row + 2].values.tolist()
     return ls[0:3] 
 
 
@@ -113,7 +116,7 @@ def get_possible_answers(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = statistics_file.loc[row].values.tolist()
+        ls = STATISTICS.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             subq.append(ls[0])
 
@@ -140,7 +143,7 @@ def get_counts(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = statistics_file.loc[row].values.tolist()
+        ls = STATISTICS.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             counts.append(ls[1])
         else:
@@ -159,7 +162,7 @@ def get_data(code):
     row = codex[code] + 2
     while row > 0:
         row += 1
-        ls = statistics_file.loc[row].values.tolist()
+        ls = STATISTICS.loc[row].values.tolist()
         if not pd.isna(ls[2]):
             perc.append(ls[2])
         else:

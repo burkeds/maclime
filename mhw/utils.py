@@ -5,11 +5,15 @@ Created on Apr. 12, 2022
 This file contains various general purpose utility functions
 """
 
-from mhw.config import zscore, pop
 import pandas as pd
 import numpy as np
 import math
 from scipy.stats import mannwhitneyu  
+
+from mhw.config import get_config
+CONFIG = get_config()
+ZSCORE = CONFIG.get_zscore()
+POP = CONFIG.get_population()
 
 
 def char_split(word):
@@ -44,8 +48,8 @@ def get_confidence_interval(data):
     if not data:
         return None, None, None
     data.sort()        
-    j = math.ceil(len(data) * 0.5 + (zscore * fpc(pop, len(data)) * math.sqrt(len(data) * 0.5 * (1-0.5))))
-    k = math.ceil(len(data) * 0.5 - (zscore * fpc(pop, len(data)) * math.sqrt(len(data) * 0.5 * (1-0.5))))
+    j = math.ceil(len(data) * 0.5 + (ZSCORE * fpc(POP, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
+    k = math.ceil(len(data) * 0.5 - (ZSCORE * fpc(POP, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
     if 0 < j < (len(data)-1):
         hconf = data[j]
     else:
@@ -78,15 +82,15 @@ def standard_error(sample):
 
 # finite population correction
 # Use when n/N > 0.05
-def fpc(N, n):
+def fpc(population_size, sample_size):
     """
     finite population correction
-    :param N: Population size
-    :param n: Sample size
+    :param population_size: Population size
+    :param sample_size: Sample size
     :return: finite population correction
     """
-    cor = N-n
-    cor = cor/(N-1)
+    cor = population_size - sample_size
+    cor = cor/(population_size - 1)
     cor = math.sqrt(cor)
     return cor
 

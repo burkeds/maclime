@@ -9,16 +9,21 @@ extract and manipulate data however you want.
 import pandas as pd
 import numpy as np
 from textwrap import wrap
-from mhw.config import zscore, pop, all_respondents
 from mhw.read_results import get_included_responses, get_results
 from mhw.scoring import get_scored_data, get_value_dict
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.figures import make_histo, plot_impact_statistics
 from mhw.read_statistics import get_all_questions, get_subquestion
 
-results = get_results()
-questions = get_all_questions()
-if not results.empty:
+from mhw.config import get_config
+CONFIG = get_config()
+ZSCORE = CONFIG.get_zscore()
+POP = CONFIG.get_population()
+ALL_RESPONDENTS = CONFIG.get_all_respondents()
+RESULTS = get_results()
+QUESTIONS = get_all_questions()
+
+if not RESULTS.empty:
     from mhw.include_arrays import *
     from mhw.include_arrays import subtract_include
 
@@ -50,7 +55,7 @@ def _get_academic_impact(resp_id):
                     'AE6(SQ008)',
                     'AE6(SQ009)',
                     'AE6(SQ010)']
-    xs = results[impact_codes].xs(resp_id)
+    xs = RESULTS[impact_codes].xs(resp_id)
     responses = xs.to_dict()
     scores = []
     for code in impact_codes:
@@ -97,14 +102,14 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
         df.attrs['include'] = include
         df.attrs['include_comp'] = include_comp
         df.attrs['description'] = description
-        df.attrs['sample_size'] = all_respondents
-        df.attrs['population_size'] = pop
+        df.attrs['sample_size'] = ALL_RESPONDENTS
+        df.attrs['population_size'] = POP
         df.attrs['included_respondents'] = len(include)
         df.attrs['complementary_respondents'] = len(include_comp)
 
         first_code = df.index[0]
-        df.attrs['question'] = questions[first_code].question
-        df.attrs['possible_answers'] = questions[first_code].possible_answers
+        df.attrs['question'] = QUESTIONS[first_code].question
+        df.attrs['possible_answers'] = QUESTIONS[first_code].possible_answers
         for code in df.index.tolist():
             df.loc[code, 'subquestion'] = get_subquestion(code)
             responses = get_included_responses(code, include)
@@ -115,7 +120,7 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
             df.attrs['include_scores'] = scores_inc
             if len(scores) > 1:
                 df.loc[code, 'mean'] = float(np.mean(scores))
-                df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+                df.loc[code, 'moe'] = float(standard_error(scores) * ZSCORE * fpc(POP, len(scores)))
                 lconf, median, hconf = get_confidence_interval(scores)
                 df.loc[code, 'lconf'] = float(lconf)
                 df.loc[code, 'median'] = float(median)
@@ -135,7 +140,7 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
             df.attrs['complementary_scores'] = scores_comp
             if len(scores) > 1:
                 df.loc[code, 'comp_mean'] = float(np.mean(scores))
-                df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(pop, len(scores)))
+                df.loc[code, 'comp_moe'] = float(standard_error(scores) * ZSCORE * fpc(POP, len(scores)))
                 lconf, median, hconf = get_confidence_interval(scores)
                 df.loc[code, 'comp_lconf'] = float(lconf)
                 df.loc[code, 'comp_median'] = float(median)
@@ -178,7 +183,7 @@ def mh2(include, description="", include_other=None, print_table=False, make_fig
     codes = ['MH2']
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, inc_under)
+        include_comp = subtract_include(include_all, include)
     mh2_stats = _get_stats_comparison(codes,
                                       include=include,
                                       description=description,

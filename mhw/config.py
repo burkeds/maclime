@@ -9,7 +9,6 @@ These variables will change for any given survey.
 from matplotlib import rc
 import pandas as pd
 
-
 CONFIG = None
 
 
@@ -24,11 +23,13 @@ class Configuration:
         _ALL_RESPONDENTS: The number of respondents
         _ZSCORE: The z-score used to calculate confidence intervals
         _POPULATION: The estimated population size
+        _INCLUDE_ALL: The include array containing all respondents
         _FONT: The font used by matplotlib in figures
 
     Methods:
         get_results_file: Returns the results file
         set_results_file: Sets the results file by specifying the path to the file
+        get_include_all: Returns the include array containing all respondents
         get_statistics_file: Returns the statistics file
         set_statistics_file: Sets the statistics file by specifying the path to the file
         get_all_respondents: Returns the total number of respondents
@@ -46,6 +47,7 @@ class Configuration:
     _ALL_RESPONDENTS = None
     _ZSCORE = 1.96
     _POPULATION = None
+    _INCLUDE_ALL = None
     # Font used by matplotlib in figures
     _FONT = {'family': 'DejaVu Sans',
              'weight': 'normal',
@@ -70,8 +72,13 @@ class Configuration:
     def set_results_file(self, **args):
         try:
             self._RESULTS_FILE = pd.read_excel(**args)
+            self._ALL_RESPONDENTS = len(self._RESULTS_FILE.index)
+            self._INCLUDE_ALL = list(self._RESULTS_FILE.index)
         except FileNotFoundError as _:
             self._RESULTS_FILE = pd.DataFrame()
+
+    def get_include_all(self):
+        return self._INCLUDE_ALL
 
     def get_statistics_file(self):
         return self._STATISTICS_FILE
@@ -106,6 +113,12 @@ class Configuration:
     def set_font(self, **args):
         self._FONT = args
         rc('font', **args)
+
+
+def create_config():
+    global CONFIG
+    CONFIG = Configuration()
+    return CONFIG
 
 
 def get_config():

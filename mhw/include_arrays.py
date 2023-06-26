@@ -4,19 +4,17 @@ Created on April 27, 2023
 @author: Devin Burke
 
 This file houses user defined include arrays. 
-An include array is a dictionary with an entry for each respondent according to their respondent ID.
-If a respondent gave the specified response for a given question code
-the value at the respondent's key is True, otherwise False.
-For an array to be imported it must be listed as a string in __all__
-Include arrays can be combined with added together or subtracted from each other
+An include array is a list with an entry for each respondent according to their respondent ID.
+If a respondent gave the specified response for a given question code.
+Include arrays can be combined with added together or subtracted from each other.
 
-Pass include arrays to functions called from your survey file and use them to
+Pass include arrays to functions called from your main survey file and use them to
 filter your data.
 """
 
 from collections import Counter
 from mhw.read_results import get_results
-RESULTS = get_results()
+
 
 # Returns a list of index values (respondent IDs) that have the response to the code.
 def get_include_array(code, response):
@@ -26,6 +24,7 @@ def get_include_array(code, response):
     :param response: The response
     :return: A list of respondent IDs
     """
+    RESULTS = get_results()
     f_results = RESULTS[RESULTS[code] == response]
     return f_results.index.tolist()
 

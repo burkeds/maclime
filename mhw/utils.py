@@ -12,8 +12,6 @@ from scipy.stats import mannwhitneyu
 
 from mhw.config import get_config
 CONFIG = get_config()
-ZSCORE = CONFIG.get_zscore()
-POP = CONFIG.get_population()
 
 
 def char_split(word):
@@ -44,12 +42,14 @@ def get_confidence_interval(data):
     :param data: The data
     :return: The median and lower/upper limits of the median confidence interval
     """
+    zscore = CONFIG.get_zscore()
+    pop = CONFIG.get_population()
     data = [i for i in data if not pd.isna(i)]
     if not data:
         return None, None, None
     data.sort()        
-    j = math.ceil(len(data) * 0.5 + (ZSCORE * fpc(POP, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
-    k = math.ceil(len(data) * 0.5 - (ZSCORE * fpc(POP, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
+    j = math.ceil(len(data) * 0.5 + (zscore * fpc(pop, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
+    k = math.ceil(len(data) * 0.5 - (zscore * fpc(pop, len(data)) * math.sqrt(len(data) * 0.5 * (1 - 0.5))))
     if 0 < j < (len(data)-1):
         hconf = data[j]
     else:

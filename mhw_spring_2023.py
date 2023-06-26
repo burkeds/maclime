@@ -22,6 +22,7 @@ POP = CONFIG.get_population()
 ALL_RESPONDENTS = CONFIG.get_all_respondents()
 RESULTS = get_results()
 QUESTIONS = get_all_questions()
+INCLUDE_ALL = CONFIG.get_include_all()
 
 if not RESULTS.empty:
     from mhw.include_arrays import *
@@ -81,7 +82,7 @@ def _get_stats_comparison(*args, include=None, description="", include_other=Non
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     stats = ['subquestion',
              'mean',
              'moe',
@@ -183,7 +184,7 @@ def mh2(include, description="", include_other=None, print_table=False, make_fig
     codes = ['MH2']
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     mh2_stats = _get_stats_comparison(codes,
                                       include=include,
                                       description=description,
@@ -207,7 +208,7 @@ def ae0(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE0(SQ001)',
              'AE0(SQ002)',
              'AE0(SQ003)',
@@ -238,7 +239,7 @@ def ae1(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE1(SQ001)',
              'AE1(SQ002)',
              'AE1(SQ003)',
@@ -268,7 +269,7 @@ def ae2(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE2(SQ001)',
              'AE2(SQ002)',
              'AE2(SQ003)',
@@ -300,7 +301,7 @@ def ae21(include, description="", include_other=None, print_table=False, make_fi
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE21(SQ001)',
              'AE21(SQ002)',
              'AE21(SQ003)',
@@ -331,7 +332,7 @@ def ae3(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE3(SQ001)',
              'AE3(SQ002)',
              'AE3(SQ003)',
@@ -362,7 +363,7 @@ def ae4(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE4(SQ001)',
              'AE4(SQ002)',
              'AE4(SQ003)',
@@ -393,7 +394,7 @@ def ae5(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE5(SQ001)',
              'AE5(SQ002)',
              'AE5(SQ003)',
@@ -423,7 +424,7 @@ def ae6(include, description="", include_other=None, print_table=False, make_fig
     """
     include_comp = include_other
     if not include_comp:
-        include_comp = subtract_include(include_all, include)
+        include_comp = subtract_include(INCLUDE_ALL, include)
     codes = ['AE6(SQ001)',
              'AE6(SQ002)',
              'AE6(SQ003)',

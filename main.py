@@ -12,17 +12,20 @@ you assigned to each question and subquestion in limesurvey.
 This file should be run as main. From here you import include arrays from the include_arrays file, and call functions
 you have defined in a survey specific file such as mhw_spring_2022.
 """
-import mhw.config
-from mhw_spring_2023 import *
-from mhw.include_arrays import *
-import os
 
-# Configure the package
-CONFIG = mhw.config.get_config()
-CONFIG.set_results_file('working/results/results-survey265235_2023.xls', header=0, skiprows=[1], index_col=0)
-CONFIG.set_statistics_file('working/results/statistic-survey265235_2023.xls', header=None)
-CONFIG.set_all_respondents(33)
+import os
+# Configure the mhw package. This must be done before importing anything from mhw.
+import mhw.config
+CONFIG = mhw.config.create_config()
+CONFIG.set_results_file(io=r'working/results/results-survey265235_2023.xls', header=0, skiprows=[1], index_col=0)
+CONFIG.set_statistics_file(io=r'working/results/statistic-survey265235_2023.xls', header=None)
 CONFIG.set_population(350)
+
+# Import your survey file
+from mhw_spring_2023 import *
+
+# Import methods to create include arrays
+from mhw.include_arrays import *
 
 all_respondents = CONFIG.get_all_respondents()
 

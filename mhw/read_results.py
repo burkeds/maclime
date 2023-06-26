@@ -10,7 +10,6 @@ import pandas as pd
 
 from mhw.config import get_config
 CONFIG = get_config()
-RESULTS_FILE = CONFIG.get_results_file()
 
 
 # Returns list of responses for a question code
@@ -20,8 +19,8 @@ def get_all_responses(code):
     :param code: The question code
     :return: A list of responses
     """
-    keys = RESULTS_FILE.index.tolist()
-    values = RESULTS_FILE[code].values.tolist()
+    keys = CONFIG.get_results_file().index.tolist()
+    values = CONFIG.get_results_file()[code].values.tolist()
     responses = {keys[i]: None if pd.isna(values[i]) else values[i] for i in range(len(keys))}
     return responses
 
@@ -34,11 +33,11 @@ def get_single_response(code, resp_id):
     :return: A single response
     """
     response_id = int(resp_id)
-    response = RESULTS_FILE.loc[response_id, code]
+    response = CONFIG.get_results_file().loc[response_id, code]
     if pd.isna(response):
         return None
     else:
-        return RESULTS_FILE.loc[response_id, code]
+        return CONFIG.get_results_file().loc[response_id, code]
 
 
 # Returns only responses which have a corresponding True value in the include array
@@ -49,7 +48,7 @@ def get_included_responses(code, include):
     :param include: The include array
     :return: A list of responses
     """
-    return RESULTS_FILE[code][include].to_list()
+    return CONFIG.get_results_file()[code][include].to_list()
 
 
 def get_results():
@@ -57,4 +56,4 @@ def get_results():
     Returns the results dataframe.
     :return: The results dataframe
     """
-    return RESULTS_FILE
+    return CONFIG.get_results_file()

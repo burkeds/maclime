@@ -20,80 +20,88 @@ CONFIG = mhw.config.create_config()
 CONFIG.set_results_file(io=r'working/results/results-survey265235_2023.xls', header=0, skiprows=[1], index_col=0)
 CONFIG.set_statistics_file(io=r'working/results/statistic-survey265235_2023.xls', header=None)
 CONFIG.set_population(350)
-
 # Import your survey file
 from mhw_spring_2023 import *
-
+from mhw_spring_2023 import analyze_ae
 # Import methods to create include arrays
-from mhw.include_arrays import *
+from mhw.questions import QuestionSection
+from my_includes import *
 
-all_respondents = CONFIG.get_all_respondents()
+sample_size = CONFIG.get_all_respondents()
 
-# Define inclusion arrays
-# Any include arrays defined here need to be added to __all__ to be imported with *
-# All respondents
-include_all = get_include_array('C0', 'I understand and agree to participate in the study.')
+# Define question sections which contain a list of question codes.
+# Questions and results can be accessed by calling the question code.
+# QuestionSection.questions[code] returns a Question object.
+ae0 = QuestionSection(top_code='AE0',
+                      title='Social Perception',
+                      codes=['AE0(SQ001)',
+                             'AE0(SQ002)',
+                             'AE0(SQ003)',
+                             'AE0(SQ004)',
+                             'AE0(SQ005)',
+                             'AE0(SQ006)']
+                      )
 
-inc_phd = get_include_array('SAL1', 'I am a PhD level graduate student within the Department of Physics and Astronomy.')
-inc_master = get_include_array('SAL1', 'I am a master level graduate student within the Department of Physics and '
-                                       'Astronomy.')
-# Graduate students
-inc_grad = combine_include(inc_phd, inc_master, logic='OR')
+ae1 = QuestionSection(top_code='AE1',
+                      title='Department Perception',
+                      codes=['AE1(SQ001)',
+                             'AE1(SQ002)',
+                             'AE1(SQ003)',
+                             'AE1(SQ004)',
+                             'AE1(SQ005)']
+                      )
+ae2 = QuestionSection(top_code='AE2',
+                      title='Graduate student workload',
+                      codes=['AE2(SQ001)',
+                             'AE2(SQ002)',
+                             'AE2(SQ003)',
+                             'AE2(SQ004)',
+                             'AE2(SQ005)',
+                             'AE2(SQ006)',
+                             'AE2(SQ007)']
+                      )
 
-# Undergrads
-inc_under = get_include_array('SAL1', 'I am an undergraduate student.')
+ae21 = QuestionSection(top_code='AE21',
+                       title='TA workload',
+                       codes=['AE21(SQ001)',
+                              'AE21(SQ002)',
+                              'AE21(SQ003)',
+                              'AE21(SQ004)',
+                              'AE21(SQ005)',
+                              'AE21(SQ006)']
+                      )
 
-# Female identifying
-inc_fem = get_include_array('PI3', 'Female (cis or trans)')
+ae3 = QuestionSection(top_code='AE3',
+                      title='Undergraduate workload',
+                      codes=['AE3(SQ001)',
+                             'AE3(SQ002)',
+                             'AE3(SQ003)',
+                             'AE3(SQ004)',
+                             'AE3(SQ005)',
+                             'AE3(SQ006)']
+                      )
 
-# Male identifying
-inc_mal = get_include_array('PI3', 'Male (cis or trans)')
+ae4 = QuestionSection(top_code='AE4',
+                      title='Co-op workload',
+                      codes=['AE4(SQ001)',
+                             'AE4(SQ002)',
+                             'AE4(SQ003)',
+                             'AE4(SQ004)',
+                             'AE4(SQ005)',
+                             'AE4(SQ006)']
+                      )
 
-# Person with a disability
-inc_disa = get_include_array('PI2', "Yes")
+ae5 = QuestionSection(top_code='AE5',
+                      title='Undergraduate thesis experience',
+                      codes=['AE5(SQ001)',
+                             'AE5(SQ002)',
+                             'AE5(SQ003)',
+                             'AE5(SQ004)',
+                             'AE5(SQ005)']
+                      )
 
-# Racialized person
-inc_race = get_include_array('PI1', "Yes")
-
-# Employed but not on co-op
-inc_a = get_include_array("SAL9(SQ001)", "Yes")
-inc_b = get_include_array("SAL9(SQ002)", "Yes")
-inc_c = get_include_array("SAL9(SQ003)", "Yes")
-inc_emp = combine_include(inc_a, inc_b, inc_c, logic='OR')
-
-# Employed as a TA or IA
-inc_TA = get_include_array('SAL9(SQ003)', "Yes")
-
-# Unemployed and not on co-op
-inc_unem = subtract_include(get_include_array('SAL9(SQ004)', "Yes"),
-                            get_include_array('SAL6', "I am in a co-op work placement this semester."))
-
-# Currently on co-op placement
-inc_coop = get_include_array('SAL6', "I am in a co-op work placement this semester.")
-
-# Employed but not as a TA
-inc_d = get_include_array("SAL9(SQ001)", "Yes")
-inc_e = get_include_array("SAL9(SQ002)", "Yes")
-inc_f = get_include_array('SAL6', "I am in a co-op work placement this semester.")
-inc_emp_notTA = combine_include(inc_d, inc_e, inc_f, logic='OR')
-
-# Crisis and struggling
-inc_crisis = get_include_array('MH2', 'In crisis')
-inc_struggling = get_include_array('MH2', 'Struggling')
-inc_danger = combine_include(inc_crisis, inc_struggling, logic='OR')
-
-# Racialized graduates and undergraduates
-inc_grad_race = combine_include(inc_grad, inc_race, logic='AND')
-inc_under_race = combine_include(inc_under, inc_race, logic='AND')
-
-# Undergraduates that are not racialized
-inc_under_not_race = subtract_include(inc_under, inc_under_race)
-
-# Male and female undergraduates and graduate
-inc_under_fem = combine_include(inc_under, inc_fem, logic='AND')
-inc_grad_fem = combine_include(inc_grad, inc_fem, logic='AND')
-inc_under_mal = combine_include(inc_under, inc_mal, logic='AND')
-inc_grad_mal = combine_include(inc_grad, inc_mal, logic='AND')
+# Dictionary of each section
+sections = [ae0, ae1, ae2, ae21, ae3, ae4, ae5]
 
 # Output_dict describes output directories by their relative path from the working directory
 # Each key maps to a path, an include array, and a file description
@@ -143,16 +151,18 @@ for key in output_keys:
     valid_resp = len(include)
 
     print("Description:\t", description)
-    print("Total number of respondents:\t", all_respondents)
+    print("Total number of respondents:\t", sample_size)
     print("Number of\t", description+":", "\t", valid_resp )
     print("********************************************************************")
     mh2(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae0(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae1(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae2(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae21(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae3(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae4(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
-    ae5(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
+
+    for section in sections:
+        analyze_ae(include=include,
+                   codes=section.codes,
+                   title=section.title,
+                   description=description,
+                   include_other=other_include,
+                   print_table=False, make_figures=False, save_fig=False)
+
     ae6(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
 print("END")

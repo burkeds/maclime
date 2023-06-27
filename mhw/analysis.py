@@ -3,7 +3,8 @@ import pandas as pd
 
 from mhw.include_arrays import subtract_include
 from mhw.read_results import get_included_responses
-from mhw.read_statistics import get_subquestion, get_all_questions
+from mhw.read_statistics import get_subquestion
+from mhw.questions import get_all_questions
 from mhw.scoring import get_scored_data
 from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.config import get_config

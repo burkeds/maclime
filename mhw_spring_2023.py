@@ -14,7 +14,7 @@ from mhw.analysis import get_stats_comparison
 from mhw.read_results import get_results
 from mhw.scoring import get_value_dict
 from mhw.figures import make_histo, plot_impact_statistics
-from mhw.read_statistics import get_all_questions
+from mhw.questions import get_all_questions
 
 from mhw.config import get_config
 CONFIG = get_config()
@@ -28,16 +28,6 @@ INCLUDE_ALL = CONFIG.get_include_all()
 if not RESULTS.empty:
     from mhw.include_arrays import *
     from mhw.include_arrays import subtract_include
-
-__all__ = ['mh2',
-           'ae0',
-           'ae1',
-           'ae2',
-           'ae21',
-           'ae3',
-           'ae4',
-           'ae5',
-           'ae6']
 
 
 def _get_academic_impact(resp_id):
@@ -96,219 +86,31 @@ def mh2(include, description="", include_other=None, print_table=False, make_fig
         make_histo(mh2_stats, "Mental_health_continuum", description, complementary=True, save_figure=save_fig)
 
 
-def ae0(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
+def analyze_ae(include, codes=None, title="", description="", include_other=None, print_table=False, make_figures=False,
+               save_fig=False):
     """
-    Gets the statistics for the social perception.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for social perception.
-    """
+        Gets the statistics for the social perception.
+        :param include: An include array of respondents.
+        :param codes: The question codes to analyze.
+        :param title: The title of the analysis.
+        :param description: A description of the inclusion criteria.
+        :param include_other: Another include array for comparison.
+        :param print_table: When true, prints the table to the console.
+        :param make_figures: When true, makes figures.
+        :param save_fig: When true, saves figures.
+        :return: A dataframe with the statistics for social perception.
+        """
     include_comp = include_other
     if not include_comp:
         include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE0(SQ001)',
-             'AE0(SQ002)',
-             'AE0(SQ003)',
-             'AE0(SQ004)',
-             'AE0(SQ005)',
-             'AE0(SQ006)']
     stats = get_stats_comparison(codes,
                                  include=include,
                                  description=description,
                                  include_other=include_comp,
                                  print_table=print_table)
     if make_figures:
-        plot_impact_statistics(stats, title="Social perception", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Social perception", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae1(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the department perception.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for the department perception.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE1(SQ001)',
-             'AE1(SQ002)',
-             'AE1(SQ003)',
-             'AE1(SQ004)',
-             'AE1(SQ005)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="Department perception", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Department perception", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae2(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the graduate student workload.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for graduate student workload.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE2(SQ001)',
-             'AE2(SQ002)',
-             'AE2(SQ003)',
-             'AE2(SQ004)',
-             'AE2(SQ005)',
-             'AE2(SQ006)',
-             'AE2(SQ007)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="Graduate student workload", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Graduate student workload", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae21(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the TA workload.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for TA workload.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE21(SQ001)',
-             'AE21(SQ002)',
-             'AE21(SQ003)',
-             'AE21(SQ004)',
-             'AE21(SQ005)',
-             'AE21(SQ006)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="TA workload", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="TA workload", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae3(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the undergraduate workload.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for undergraduate workload.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE3(SQ001)',
-             'AE3(SQ002)',
-             'AE3(SQ003)',
-             'AE3(SQ004)',
-             'AE3(SQ005)',
-             'AE3(SQ006)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="Undergraduate workload", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Undergraduate workload", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae4(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the co-op workload.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for co-op workload.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE4(SQ001)',
-             'AE4(SQ002)',
-             'AE4(SQ003)',
-             'AE4(SQ004)',
-             'AE4(SQ005)',
-             'AE4(SQ006)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="Co-op workload", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Co-op workload", complement=True, save_figure=save_fig)
-    return stats
-
-
-def ae5(include, description="", include_other=None, print_table=False, make_figures=False, save_fig=False):
-    """
-    Gets the statistics for the undergraduate thesis experience.
-    :param include: An include array of respondents.
-    :param description: A description of the inclusion criteria.
-    :param include_other: Another include array for comparison.
-    :param print_table: When true, prints the table to the console.
-    :param make_figures: When true, makes figures.
-    :param save_fig: When true, saves figures.
-    :return: A dataframe with the statistics for undergraduate thesis experience.
-    """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    codes = ['AE5(SQ001)',
-             'AE5(SQ002)',
-             'AE5(SQ003)',
-             'AE5(SQ004)',
-             'AE5(SQ005)']
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-    if make_figures:
-        plot_impact_statistics(stats, title="Undergraduate thesis experience", complement=False, save_figure=save_fig)
-        plot_impact_statistics(stats, title="Undergraduate thesis experience", complement=True, save_figure=save_fig)
+        plot_impact_statistics(stats, title=title, complement=False, save_figure=save_fig)
+        plot_impact_statistics(stats, title=title, complement=True, save_figure=save_fig)
     return stats
 
 

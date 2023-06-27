@@ -13,21 +13,28 @@ This file should be run as main. From here you import include arrays from the in
 you have defined in a survey specific file such as mhw_spring_2022.
 """
 
+# Import some useful packages
 import os
+from textwrap import wrap
+
 # Configure the mhw package. This must be done before importing anything from mhw.
 import mhw.config
 CONFIG = mhw.config.create_config()
 CONFIG.set_results_file(io=r'working/results/results-survey265235_2023.xls', header=0, skiprows=[1], index_col=0)
 CONFIG.set_statistics_file(io=r'working/results/statistic-survey265235_2023.xls', header=None)
 CONFIG.set_population(350)
+
 # Import your survey file
 from mhw_spring_2023 import *
-from mhw_spring_2023 import analyze_ae
-# Import methods to create include arrays
-from mhw.questions import QuestionSection
+
+# Import your include arrays
 from my_includes import *
 
+# QuestionSection objects can be used to define survey sections and access questions.
+from mhw.questions import QuestionSection
+
 sample_size = CONFIG.get_all_respondents()
+population_size = CONFIG.get_population()
 
 # Define question sections which contain a list of question codes.
 # Questions and results can be accessed by calling the question code.
@@ -69,7 +76,7 @@ ae21 = QuestionSection(top_code='AE21',
                               'AE21(SQ004)',
                               'AE21(SQ005)',
                               'AE21(SQ006)']
-                      )
+                       )
 
 ae3 = QuestionSection(top_code='AE3',
                       title='Undergraduate workload',
@@ -99,9 +106,22 @@ ae5 = QuestionSection(top_code='AE5',
                              'AE5(SQ004)',
                              'AE5(SQ005)']
                       )
+ae6 = QuestionSection(top_code='AE6',
+                      title='Impact of academics on wellness',
+                      codes=['AE6(SQ001)',
+                             'AE6(SQ002)',
+                             'AE6(SQ003)',
+                             'AE6(SQ004)',
+                             'AE6(SQ005)',
+                             'AE6(SQ006)',
+                             'AE6(SQ007)',
+                             'AE6(SQ008)',
+                             'AE6(SQ009)',
+                             'AE6(SQ010)']
+                      )
 
 # Dictionary of each section
-sections = [ae0, ae1, ae2, ae21, ae3, ae4, ae5]
+sections = [ae0, ae1, ae2, ae21, ae3, ae4, ae5, ae6]
 
 # Output_dict describes output directories by their relative path from the working directory
 # Each key maps to a path, an include array, and a file description
@@ -130,6 +150,21 @@ output_dict = {'all'                    : [rpath+'all\\',                    inc
                'graduate_male'          :   [rpath+'graduate_male\\',        inc_grad_mal, 'male_graduate']
                }
 
+# Create labels to use for AE6
+xlabels = ["classwork",
+           "labwork",
+           "testing",
+           "research/thesis",
+           "co-op",
+           "TAs",
+           "faculty/admin",
+           "non-P&A",
+           "students",
+           "not academic"]
+xlabels = ['\n'.join(wrap(label, 20)) for label in xlabels]
+ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
+ylabels = ['\n'.join(wrap(label, 10)) for label in ylabels]
+
 output_keys = output_dict.keys()
 top = os.getcwd()
 for key in output_keys:
@@ -147,22 +182,28 @@ for key in output_keys:
         
     # Print to system file. Comment this line to print to python console.
     # sys.stdout = open(desc+".txt", "w")
-       
-    valid_resp = len(include)
 
     print("Description:\t", description)
     print("Total number of respondents:\t", sample_size)
-    print("Number of\t", description+":", "\t", valid_resp )
+    print("Respondents meeting inclusion criteria:\t", len(include))
+    print("Estimated population size:\t", population_size)
     print("********************************************************************")
     mh2(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
 
     for section in sections:
-        analyze_ae(include=include,
-                   codes=section.codes,
-                   title=section.title,
-                   description=description,
-                   include_other=other_include,
-                   print_table=False, make_figures=False, save_fig=False)
-
-    ae6(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
+        if section.top_code == 'AE6':
+            analyze_ae(include=include,
+                       codes=section.codes,
+                       title=section.title,
+                       description=description,
+                       include_other=other_include,
+                       print_table=False, make_figures=False, save_fig=False,
+                       x_labels=xlabels, y_labels=ylabels)
+        else:
+            analyze_ae(include=include,
+                       codes=section.codes,
+                       title=section.title,
+                       description=description,
+                       include_other=other_include,
+                       print_table=False, make_figures=False, save_fig=False)
 print("END")

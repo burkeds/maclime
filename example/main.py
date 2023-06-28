@@ -34,12 +34,20 @@ from my_includes import *
 # QuestionSection objects can be used to define survey sections and access questions.
 from mhw.questions import QuestionSection
 
+# Import figure callback functions
+from mhw.figures import make_histo, plot_impact_statistics
+
 sample_size = CONFIG.get_all_respondents()
 population_size = CONFIG.get_population()
 
 # Define question sections which contain a list of question codes.
 # Questions and results can be accessed by calling the question code.
 # QuestionSection.questions[code] returns a Question object.
+mh2 = QuestionSection(top_code='MH2',
+                      title='Mental Health Continuum',
+                      codes=['MH2']
+                      )
+
 ae0 = QuestionSection(top_code='AE0',
                       title='Social Perception',
                       codes=['AE0(SQ001)',
@@ -122,7 +130,7 @@ ae6 = QuestionSection(top_code='AE6',
                       )
 
 # Dictionary of each section
-sections = [ae0, ae1, ae2, ae21, ae3, ae4, ae5, ae6]
+sections = [mh2, ae0, ae1, ae2, ae21, ae3, ae4, ae5, ae6]
 
 # Output_dict describes output directories by their relative path from the working directory
 # Each key maps to a path, an include array, and a file description
@@ -189,22 +197,42 @@ for key in output_keys:
     print("Respondents meeting inclusion criteria:\t", len(include))
     print("Estimated population size:\t", population_size)
     print("********************************************************************")
-    mh2(include, description, other_include, print_table=False, make_figures=False, save_fig=False)
 
-    for section in sections:
+    analyze_ae(include=include,
+               codes=mh2.codes,
+               title=mh2.title,
+               description=description,
+               include_other=other_include,
+               print_table=False,
+               figure_callback=make_histo,
+               callback_args={'title': mh2.title,
+                              'description': description,
+                              'save_figure': False})
+
+    for section in sections[1:]:
         if section.top_code == 'AE6':
             analyze_ae(include=include,
                        codes=section.codes,
                        title=section.title,
                        description=description,
                        include_other=other_include,
-                       print_table=False, make_figures=False, save_fig=False,
-                       x_labels=xlabels, y_labels=ylabels)
+                       print_table=False,
+                       figure_callback=plot_impact_statistics,
+                       callback_args={'title': mh2.title,
+                                      'description': description,
+                                      'save_figure': False,
+                                      'x_labels': xlabels,
+                                      'y_labels': ylabels})
+
         else:
             analyze_ae(include=include,
                        codes=section.codes,
                        title=section.title,
                        description=description,
                        include_other=other_include,
-                       print_table=False, make_figures=False, save_fig=False)
+                       print_table=False,
+                       figure_callback=make_histo,
+                       callback_args={'title': mh2.title,
+                                      'description': description,
+                                      'save_figure': False})
 print("END")

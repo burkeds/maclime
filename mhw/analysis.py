@@ -12,6 +12,7 @@ from mhw.config import get_config
 
 def get_stats_comparison(*args,
                          include=None,
+                         title="",
                          description="",
                          include_other=None,
                          print_table=False,
@@ -20,6 +21,7 @@ def get_stats_comparison(*args,
     Gets the statistics for the given questions and subquestions.
     :param args: Any number of question codes or subquestion codes.
     :param include: An include array.
+    :param title: Title of the analysis.
     :param description: Description of inclusion criteria.
     :param include_other: Another include array for comparison.
     :param print_table: When true, prints the table to the console.
@@ -55,6 +57,7 @@ def get_stats_comparison(*args,
         df = frames[i]
         df.attrs['include'] = include
         df.attrs['include_comp'] = include_comp
+        df.attrs['title'] = title
         df.attrs['description'] = description
         df.attrs['sample_size'] = all_respondents
         df.attrs['population_size'] = population

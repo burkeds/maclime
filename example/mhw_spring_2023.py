@@ -6,12 +6,23 @@ Created on April 27, 2023
 This file is where you should write survey specific functions to
 extract and manipulate data however you want.
 """
+import math
+import textwrap
 
-from mhw.analysis import get_stats_comparison
-from mhw.read_results import get_results
+import matplotlib
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator
+
+from mhw.read_results import get_results, get_included_responses
 from mhw.questions import get_all_questions
 
 from mhw.config import get_config
+from mhw.read_statistics import get_subquestion, get_possible_answers
+from mhw.scoring import get_scored_data
+from mhw.utils import mwu_test, standard_error, fpc, get_confidence_interval
+
 CONFIG = get_config()
 ZSCORE = CONFIG.get_zscore()
 POP = CONFIG.get_population()
@@ -22,43 +33,6 @@ INCLUDE_ALL = CONFIG.get_include_all()
 
 if not RESULTS.empty:
     from mhw.include_arrays import *
-    from mhw.include_arrays import subtract_include
-
-
-def analyze_ae(include, codes=None, title="", description="", include_other=None, print_table=None,
-               figure_callback=None, callback_args=None):
-    """
-        Perform some sort of statistical analysis on a set of question codes with a set of inclusion criteria defined
-        by an include array. It will perform a complementary analysis based on the complement of the include array.
-        This method accepts a callback function to produce a figure if desired. It will pass the statistics dataframe
-        and some arguments to the callback.
-
-        :param include: An include array of respondents.
-        :param codes: The question codes to analyze.
-        :param title: The title of the analysis.
-        :param description: A description of the inclusion criteria.
-        :param include_other: Another include array for comparison.
-        :param print_table: When true, prints the table to the console.
-        :param figure_callback: A callback function which is passed the statistics dataframe and some arguments
-                                to produce a figure.
-        :param callback_args: A dictionary of keyword arguments to pass to the figure callback function.
-        :return: A dataframe with the statistics for social perception.
-        """
-    include_comp = include_other
-    if not include_comp:
-        include_comp = subtract_include(INCLUDE_ALL, include)
-    stats = get_stats_comparison(codes,
-                                 include=include,
-                                 title=title,
-                                 description=description,
-                                 include_other=include_comp,
-                                 print_table=print_table)
-
-    if figure_callback:
-        figure_callback(**callback_args, complement=False)
-        figure_callback(**callback_args, complement=True)
-
-    return stats
 
 
 # Store dictionaries that map responses to arbitrary
@@ -161,3 +135,255 @@ def get_value_dict(code):
                 'Somewhat agree': 1,
                 'Agree': 2,
                 'Strongly agree': 3}
+
+
+def get_stats_comparison(*args,
+                         include=None,
+                         title="",
+                         description="",
+                         include_other=None,
+                         print_table=False,
+                         p_test=mwu_test):
+    """
+    Gets the statistics for the given questions and subquestions.
+    :param args: Any number of question codes or subquestion codes.
+    :param include: An include array.
+    :param title: Title of the analysis.
+    :param description: Description of inclusion criteria.
+    :param include_other: Another include array for comparison.
+    :param print_table: When true, prints the table to the console.
+    :param p_test: The p-test to use. This is mhw.utils.mwu_test() by default but any callback function that takes two
+                   arrays and returns a float can be substituted.
+    :return: A dataframe with the statistics for the given questions and subquestions.
+    """
+    config = get_config()
+    include_all = config.get_include_all()
+    all_respondents = config.get_all_respondents()
+    population = config.get_population()
+    zscore = config.get_zscore()
+    questions = get_all_questions()
+    include_comp = include_other
+    if not include_comp:
+        include_comp = subtract_include(include_all, include)
+    stats = ['subquestion',
+             'mean',
+             'moe',
+             'lconf',
+             'median',
+             'hconf',
+             'comp_mean',
+             'comp_moe',
+             'comp_lconf',
+             'comp_median',
+             'comp_hconf',
+             'pvalue']
+    frames = []
+    for codes in args:
+        frames.append(pd.DataFrame(index=codes, columns=stats))
+    for i in range(len(frames)):
+        df = frames[i]
+        df.attrs['include'] = include
+        df.attrs['include_comp'] = include_comp
+        df.attrs['title'] = title
+        df.attrs['description'] = description
+        df.attrs['sample_size'] = all_respondents
+        df.attrs['population_size'] = population
+        df.attrs['included_respondents'] = len(include)
+        df.attrs['complementary_respondents'] = len(include_comp)
+
+        first_code = df.index[0]
+        df.attrs['question'] = questions[first_code].question
+        df.attrs['possible_answers'] = questions[first_code].possible_answers
+        for code in df.index.tolist():
+            df.loc[code, 'subquestion'] = get_subquestion(code)
+            responses = get_included_responses(code, include)
+            scores = np.array(get_scored_data(code, responses))
+            scores = [i for i in scores if not pd.isna(i)]
+            scores_inc = scores.copy()
+            df.attrs['include_responses'] = responses
+            df.attrs['include_scores'] = scores_inc
+            if len(scores) > 1:
+                df.loc[code, 'mean'] = float(np.mean(scores))
+                df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
+                lconf, median, hconf = get_confidence_interval(scores)
+                df.loc[code, 'lconf'] = float(lconf)
+                df.loc[code, 'median'] = float(median)
+                df.loc[code, 'hconf'] = float(hconf)
+            else:
+                df.loc[code, 'mean'] = None
+                df.loc[code, 'moe'] = None
+                df.loc[code, 'lconf'] = None
+                df.loc[code, 'median'] = None
+                df.loc[code, 'hconf'] = None
+
+            responses = get_included_responses(code, include_comp)
+            scores = np.array(get_scored_data(code, responses))
+            scores = [i for i in scores if not pd.isna(i)]
+            scores_comp = scores.copy()
+            df.attrs['complementary_responses'] = responses
+            df.attrs['complementary_scores'] = scores_comp
+            if len(scores) > 1:
+                df.loc[code, 'comp_mean'] = float(np.mean(scores))
+                df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
+                lconf, median, hconf = get_confidence_interval(scores)
+                df.loc[code, 'comp_lconf'] = float(lconf)
+                df.loc[code, 'comp_median'] = float(median)
+                df.loc[code, 'comp_hconf'] = float(hconf)
+            else:
+                df.loc[code, 'comp_mean'] = None
+                df.loc[code, 'comp_moe'] = None
+                df.loc[code, 'comp_lconf'] = None
+                df.loc[code, 'comp_median'] = None
+                df.loc[code, 'comp_hconf'] = None
+
+            if scores_inc and scores_comp:
+                df.loc[code, 'pvalue'] = float(p_test(scores_inc, scores_comp))
+            else:
+                df.loc[code, 'pvalue'] = None
+        frames[i] = df.replace(pd.NA, np.nan)
+        if print_table:
+            print("********************************************************************")
+            print("Top question text: {}".format(df.attrs['question']))
+            print("Possible answers: {}".format(df.attrs['possible_answers']))
+            print(df.round(2).to_csv(sep='\t'))
+            print("********************************************************************")
+    if len(frames) == 1:
+        return frames[0]
+    else:
+        return frames
+
+
+def make_histo(frame, title, description, complementary=False, save_figure=False, x_labels=None, y_label=None):
+    """
+    Makes a histogram of the data in the given frame.
+    :param frame: The frame to be plotted
+    :param title: The title of the plot
+    :param description: The description of the plot
+    :param complementary: Whether to use the complementary scores
+    :param save_figure: Whether to save the figure
+    :param x_labels: The labels for the x axis
+    :param y_label: The labels for the y axis
+    :return:
+    """
+    plt.clf()
+    sample = frame.attrs['sample_size']
+    if complementary:
+        data = frame.attrs['complementary_scores']
+        included_respondents = frame.attrs['complementary_respondents']
+        res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
+        description = "(comp)" + description
+    else:
+        data = frame.attrs['include_scores']
+        included_respondents = frame.attrs['included_respondents']
+        res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
+    title += res_str
+    if not x_labels:
+        possible_answers = frame.attrs['possible_answers']
+        bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+        x_labels = [x for x in possible_answers if x not in bad_labels]
+    if not y_label:
+        y_label = 'Respondent count'
+
+    _, ax = plt.subplots()
+    arrays, __, patches = ax.hist(data,
+                                  bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
+                                  edgecolor='black',
+                                  linewidth=1, zorder=3)
+    ax.bar_label(patches)
+    ax.set_title(title + "\n" + description)
+    ax.set_xticks([-2, -1, 0, 1, 2])
+    ax.set_xticklabels(x_labels)
+    ax.grid(axis='y', zorder=0)
+    ax.set_ylabel(y_label)
+    color = {0: 'red', 1: 'orange', 2: 'yellow', 3: '#90EE90', 4: '#013220'}
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    for i in range(len(arrays)):
+        patches[i].set_facecolor(color[i])
+    if save_figure:
+        plt.savefig(title + "_" + description + ".png")
+    plt.show()
+
+
+def plot_impact_statistics(impact_statistics,
+                           complement=False,
+                           title="",
+                           x_labels=None,
+                           y_label=None,
+                           include_sample_size=True,
+                           save_figure=False):
+    """
+    Plots the impact statistics for the given question.
+    :param impact_statistics: The impact statistics for the question
+    :param complement: Whether to plot the complementary statistics
+    :param title: The title of the plot
+    :param x_labels: The labels for the x-axis
+    :param y_label: The label for the y-axis
+    :param include_sample_size: Whether to include the sample size in the title
+    :param save_figure: Whether to save the figure
+    :return:
+    """
+    plt.clf()
+    df = impact_statistics
+    code = df.index[0]
+
+    included_respondents = df.attrs['included_respondents']
+    sample_size = df.attrs['sample_size']
+    description = df.attrs['description']
+    include = df.attrs['include']
+    mean_df = df['mean']
+    moe_df = df['moe']
+
+    if complement:
+        included_respondents = df.attrs['complementary_respondents']
+        sample_size = df.attrs['sample_size']
+        description = "(comp)" + df.attrs['description']
+        include = df.attrs['include_comp']
+        mean_df = df['comp_mean']
+        moe_df = df['comp_moe']
+
+    # Add information about sample size
+    if include_sample_size:
+        res_str = "(" + str(included_respondents) + " of " + str(sample_size) + ")"
+        description = description + res_str
+
+    if include_sample_size:
+        # Generate labels if not specified
+        if not x_labels:
+            x_labels = df.index.tolist()
+        if not y_label:
+            y_label = get_possible_answers(code)
+            bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+            y_label = [label for label in y_label if label not in bad_labels]
+            y_label = ['\n'.join(textwrap.wrap(label, 10)) for label in y_label]
+
+    # Add valid respondents to x_label
+    for i, label in enumerate(x_labels):
+        question_code = df.index[i]
+        responses = get_included_responses(question_code, include)
+        scores = get_scored_data(question_code, responses)
+        valid = len(scores)
+        p_value = df['pvalue'][question_code]
+        x_labels[i] += "\n {}".format(valid)
+        x_labels[i] += "\n {}".format(round(p_value, 2))
+
+    # Get bar colours from colourmap
+    cmap = matplotlib.colormaps['RdYlGn']
+    colours = []
+    low_y = min(list(get_value_dict(code).values()))
+    high_y = max(list(get_value_dict(code).values()))
+    for val in mean_df.values.tolist():
+        cval = math.fabs(low_y - val)
+        cval = cval / (high_y - low_y)
+        colours.append(matplotlib.colors.to_hex(cmap(cval)))
+    if mean_df.dropna().values.tolist():
+        # Create plot axis
+        title = title + "\n" + description
+        ax = mean_df.plot.bar(color=colours, title=title, yerr=moe_df, capsize=4)
+        ax.set_yticks(range(low_y, high_y + 1))
+        ax.set_yticklabels(y_label)
+        ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
+        ax.set_ylim([low_y, high_y])
+        ax.tick_params(direction='in')
+        if save_figure:
+            plt.savefig(title + ".png")
+        plt.show()

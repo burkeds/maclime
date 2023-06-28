@@ -35,7 +35,10 @@ from my_includes import *
 from mhw.questions import QuestionSection
 
 # Import figure callback functions
-from mhw.figures import make_histo, plot_impact_statistics
+
+# Import statistics functions that return a dataframe
+from mhw.analysis import analyze
+from example.mhw_spring_2023 import get_stats_comparison, make_histo, plot_impact_statistics
 
 sample_size = CONFIG.get_all_respondents()
 population_size = CONFIG.get_population()
@@ -198,41 +201,44 @@ for key in output_keys:
     print("Estimated population size:\t", population_size)
     print("********************************************************************")
 
-    analyze_ae(include=include,
-               codes=mh2.codes,
-               title=mh2.title,
-               description=description,
-               include_other=other_include,
-               print_table=False,
-               figure_callback=make_histo,
-               callback_args={'title': mh2.title,
+    analyze(include=include,
+            include_other=other_include,
+            stats_callback=get_stats_comparison,
+            stats_args={'codes': mh2.codes,
+                           'title': mh2.title,
+                           'description': description,
+                           'print_table': False},
+            figure_callback=make_histo,
+            callback_args={'title': mh2.title,
                               'description': description,
                               'save_figure': False})
 
     for section in sections[1:]:
         if section.top_code == 'AE6':
-            analyze_ae(include=include,
-                       codes=section.codes,
-                       title=section.title,
-                       description=description,
-                       include_other=other_include,
-                       print_table=False,
-                       figure_callback=plot_impact_statistics,
-                       callback_args={'title': mh2.title,
+            analyze(include=include,
+                    include_other=other_include,
+                    stats_callback=get_stats_comparison,
+                    stats_args={'codes': section.codes,
+                                   'title': section.title,
+                                   'description': description,
+                                   'print_table': False},
+                    figure_callback=plot_impact_statistics,
+                    callback_args={'title': mh2.title,
                                       'description': description,
                                       'save_figure': False,
                                       'x_labels': xlabels,
                                       'y_labels': ylabels})
 
         else:
-            analyze_ae(include=include,
-                       codes=section.codes,
-                       title=section.title,
-                       description=description,
-                       include_other=other_include,
-                       print_table=False,
-                       figure_callback=make_histo,
-                       callback_args={'title': mh2.title,
+            analyze(include=include,
+                    include_other=other_include,
+                    stats_callback=get_stats_comparison,
+                    stats_args={'codes': section.codes,
+                                   'title': section.title,
+                                   'description': description,
+                                   'print_table': False},
+                    figure_callback=make_histo,
+                    callback_args={'title': mh2.title,
                                       'description': description,
                                       'save_figure': False})
 print("END")

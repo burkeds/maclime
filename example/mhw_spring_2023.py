@@ -37,6 +37,7 @@ if not RESULTS.empty:
 
 # Store dictionaries that map responses to arbitrary
 # numerical values valid for a list of questions.
+# This is passed to the configuration object returned by mhw.config.get_config().
 def get_value_dict(code):
     """
     Returns a dictionary that maps responses to arbitrary numerical values for a given question code.
@@ -137,6 +138,8 @@ def get_value_dict(code):
                 'Strongly agree': 3}
 
 
+# This is an example of a function performing useful statistical analysis using methods from mhw.
+# This should be used as a callback function passed to mhw.analysis.analyze().
 def get_stats_comparison(*args,
                          include=None,
                          title="",
@@ -253,6 +256,7 @@ def get_stats_comparison(*args,
         return frames
 
 
+# This is a function used to produce a desired figure. Can be used as a callback function in analyze.
 def make_histo(frame, title, description, complementary=False, save_figure=False, x_labels=None, y_label=None):
     """
     Makes a histogram of the data in the given frame.
@@ -304,6 +308,7 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
     plt.show()
 
 
+# Another option for a figure callback function. Produces a bar chart.
 def plot_impact_statistics(impact_statistics,
                            complement=False,
                            title="",

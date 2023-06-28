@@ -10,7 +10,12 @@ from mhw.utils import standard_error, fpc, get_confidence_interval, mwu_test
 from mhw.config import get_config
 
 
-def get_stats_comparison(*args, include=None, description="", include_other=None, print_table=False):
+def get_stats_comparison(*args,
+                         include=None,
+                         description="",
+                         include_other=None,
+                         print_table=False,
+                         p_test=mwu_test):
     """
     Gets the statistics for the given questions and subquestions.
     :param args: Any number of question codes or subquestion codes.
@@ -18,6 +23,8 @@ def get_stats_comparison(*args, include=None, description="", include_other=None
     :param description: Description of inclusion criteria.
     :param include_other: Another include array for comparison.
     :param print_table: When true, prints the table to the console.
+    :param p_test: The p-test to use. This is mhw.utils.mwu_test() by default but any callback function that takes two
+                   arrays can be substituted.
     :return: A dataframe with the statistics for the given questions and subquestions.
     """
     config = get_config()
@@ -100,7 +107,7 @@ def get_stats_comparison(*args, include=None, description="", include_other=None
                 df.loc[code, 'comp_hconf'] = None
 
             if scores_inc and scores_comp:
-                df.loc[code, 'pvalue'] = float(mwu_test(scores_inc, scores_comp))
+                df.loc[code, 'pvalue'] = float(p_test(scores_inc, scores_comp))
             else:
                 df.loc[code, 'pvalue'] = None
         frames[i] = df.replace(pd.NA, np.nan)

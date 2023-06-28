@@ -15,7 +15,7 @@ from mhw.read_results import get_included_responses
 from mhw.scoring import get_scored_data
 
 
-def make_histo(frame, title, description, complementary=False, save_figure=False):
+def make_histo(frame, title, description, complementary=False, save_figure=False, x_labels=None, y_label=None):
     """
     Makes a histogram of the data in the given frame.
     :param frame: The frame to be plotted
@@ -23,6 +23,8 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
     :param description: The description of the plot
     :param complementary: Whether to use the complementary scores
     :param save_figure: Whether to save the figure
+    :param x_labels: The labels for the x axis
+    :param y_label: The labels for the y axis
     :return:
     """
     plt.clf()
@@ -37,18 +39,27 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
         included_respondents = frame.attrs['included_respondents']
         res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
     title += res_str
+    if not x_labels:
+        possible_answers = frame.attrs['possible_answers']
+        bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+        x_labels = [x for x in possible_answers if x not in bad_labels]
+    if not y_label:
+        y_label = 'Respondent count'
 
     _, ax = plt.subplots()
-    N, __, patches = ax.hist(data, bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], edgecolor='black', linewidth=1, zorder=3)
+    arrays, __, patches = ax.hist(data,
+                                  bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
+                                  edgecolor='black',
+                                  linewidth=1, zorder=3)
     ax.bar_label(patches)
     ax.set_title(title + "\n" + description)
     ax.set_xticks([-2, -1, 0, 1, 2])
-    ax.set_xticklabels(["in crisis", "struggling", "surviving", "thriving", "excelling"])
+    ax.set_xticklabels(x_labels)
     ax.grid(axis='y', zorder=0)
-    ax.set_ylabel('Respondent count')
+    ax.set_ylabel(y_label)
     color = {0: 'red', 1: 'orange', 2: 'yellow', 3: '#90EE90', 4: '#013220'}
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-    for i in range(len(N)):
+    for i in range(len(arrays)):
         patches[i].set_facecolor(color[i])
     if save_figure:
         plt.savefig(title + "_" + description + ".png")
@@ -59,7 +70,7 @@ def plot_impact_statistics(impact_statistics,
                            complement=False,
                            title="",
                            x_labels=None,
-                           y_labels=None,
+                           y_label=None,
                            include_sample_size=True,
                            save_figure=False):
     """
@@ -68,7 +79,7 @@ def plot_impact_statistics(impact_statistics,
     :param complement: Whether to plot the complementary statistics
     :param title: The title of the plot
     :param x_labels: The labels for the x-axis
-    :param y_labels: The labels for the y-axis
+    :param y_label: The label for the y-axis
     :param include_sample_size: Whether to include the sample size in the title
     :param save_figure: Whether to save the figure
     :return:
@@ -101,11 +112,11 @@ def plot_impact_statistics(impact_statistics,
         # Generate labels if not specified
         if not x_labels:
             x_labels = df.index.tolist()
-        if not y_labels:
-            y_labels = get_possible_answers(code)
+        if not y_label:
+            y_label = get_possible_answers(code)
             bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
-            y_labels = [label for label in y_labels if label not in bad_labels]
-            y_labels = ['\n'.join(textwrap.wrap(label, 10)) for label in y_labels]
+            y_label = [label for label in y_label if label not in bad_labels]
+            y_label = ['\n'.join(textwrap.wrap(label, 10)) for label in y_label]
 
     # Add valid respondents to x_label
     for i, label in enumerate(x_labels):
@@ -131,7 +142,7 @@ def plot_impact_statistics(impact_statistics,
         title = title + "\n" + description
         ax = mean_df.plot.bar(color=colours, title=title, yerr=moe_df, capsize=4)
         ax.set_yticks(range(low_y, high_y + 1))
-        ax.set_yticklabels(y_labels)
+        ax.set_yticklabels(y_label)
         ax.set_xticklabels(x_labels, rotation=45, fontsize=5.5)
         ax.set_ylim([low_y, high_y])
         ax.tick_params(direction='in')

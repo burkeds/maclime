@@ -82,11 +82,11 @@ def analyze_ae(include, codes=None, title="", description="", include_other=None
                                complement=False,
                                save_figure=save_fig,
                                x_labels=x_labels,
-                               y_labels=y_labels)
+                               y_label=y_labels)
         plot_impact_statistics(stats,
                                title=title,
                                complement=True,
                                save_figure=save_fig,
                                x_labels=x_labels,
-                               y_labels=y_labels)
+                               y_label=y_labels)
     return stats

@@ -24,7 +24,7 @@ def get_stats_comparison(*args,
     :param include_other: Another include array for comparison.
     :param print_table: When true, prints the table to the console.
     :param p_test: The p-test to use. This is mhw.utils.mwu_test() by default but any callback function that takes two
-                   arrays can be substituted.
+                   arrays and returns a float can be substituted.
     :return: A dataframe with the statistics for the given questions and subquestions.
     """
     config = get_config()

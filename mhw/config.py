@@ -48,6 +48,7 @@ class Configuration:
     _ZSCORE = 1.96
     _POPULATION = None
     _INCLUDE_ALL = None
+    _VALUE_DICT_CALLBACK = None
     # Font used by matplotlib in figures
     _FONT = {'family': 'DejaVu Sans',
              'weight': 'normal',
@@ -113,6 +114,12 @@ class Configuration:
     def set_font(self, **args):
         self._FONT = args
         rc('font', **args)
+
+    def get_value_dict(self):
+        return self._VALUE_DICT_CALLBACK
+
+    def set_value_dict_callback(self, callback):
+        self._VALUE_DICT_CALLBACK = callback
 
 
 def create_config():

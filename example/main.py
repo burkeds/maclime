@@ -26,6 +26,7 @@ CONFIG.set_population(350)
 
 # Import your survey file
 from mhw_spring_2023 import *
+CONFIG.set_value_dict_callback(get_value_dict)
 
 # Import your include arrays
 from my_includes import *

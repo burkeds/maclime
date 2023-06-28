@@ -205,13 +205,13 @@ for key in output_keys:
             include_other=other_include,
             stats_callback=get_stats_comparison,
             stats_args={'codes': mh2.codes,
-                           'title': mh2.title,
-                           'description': description,
-                           'print_table': False},
+                        'title': mh2.title,
+                        'description': description,
+                        'print_table': False},
             figure_callback=make_histo,
             callback_args={'title': mh2.title,
-                              'description': description,
-                              'save_figure': False})
+                           'description': description,
+                           'save_figure': False})
 
     for section in sections[1:]:
         if section.top_code == 'AE6':
@@ -219,26 +219,26 @@ for key in output_keys:
                     include_other=other_include,
                     stats_callback=get_stats_comparison,
                     stats_args={'codes': section.codes,
-                                   'title': section.title,
-                                   'description': description,
-                                   'print_table': False},
+                                'title': section.title,
+                                'description': description,
+                                'print_table': False},
                     figure_callback=plot_impact_statistics,
                     callback_args={'title': mh2.title,
-                                      'description': description,
-                                      'save_figure': False,
-                                      'x_labels': xlabels,
-                                      'y_labels': ylabels})
+                                   'description': description,
+                                   'save_figure': False,
+                                   'x_labels': xlabels,
+                                   'y_labels': ylabels})
 
         else:
             analyze(include=include,
                     include_other=other_include,
                     stats_callback=get_stats_comparison,
                     stats_args={'codes': section.codes,
-                                   'title': section.title,
-                                   'description': description,
-                                   'print_table': False},
+                                'title': section.title,
+                                'description': description,
+                                'print_table': False},
                     figure_callback=make_histo,
                     callback_args={'title': mh2.title,
-                                      'description': description,
-                                      'save_figure': False})
+                                   'description': description,
+                                   'save_figure': False})
 print("END")

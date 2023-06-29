@@ -116,19 +116,19 @@ def get_value_dict(code):
                 'Some of the time': 2,
                 'Most of the time': 3,
                 'All of the time': 4}
-    if code in pos_neg_list:
+    elif code in pos_neg_list:
         return {'Strongly negative': -2,
                 'Negative': -1,
                 'Neutral': 0,
                 'Positive': 1,
                 'Strongly positive': 2}
-    if code == 'MH2':
+    elif code == 'MH2':
         return {'In crisis': -2,
                 'Struggling': -1,
                 'Surviving': 0,
                 'Thriving': 1,
                 'Excelling': 2}
-    if code in agree_list:
+    elif code in agree_list:
         return {'Strongly disagree': -3,
                 'Disagree': -2,
                 'Somewhat disagree': -1,
@@ -136,6 +136,8 @@ def get_value_dict(code):
                 'Somewhat agree': 1,
                 'Agree': 2,
                 'Strongly agree': 3}
+    else:
+        return None
 
 
 # This is an example of a function performing useful statistical analysis using methods from mhw.

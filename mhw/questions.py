@@ -22,6 +22,9 @@ class Question:
         description (str): The description of the question.
         question (str): The question.
         subquestion (str): The subquestion if applicable.
+        responses (list): The responses for the question.
+        value_dict (dict): The value dictionary for the question.
+        scores (list): The scores for the question.
         question_headers (list): The headers for the question.
         possible_answers (list): The possible answers for the question.
         counts (list): The counts for each possible answer.
@@ -36,11 +39,11 @@ class Question:
     description = ""
     question = ""
     subquestion = ""
-    responses = ""
+    responses = []
     value_dict = {}
-    scores = ""
-    question_headers = ""
-    possible_answers = ""
+    scores = []
+    question_headers = []
+    possible_answers = []
     counts = []
     stats = []
     error = ""
@@ -167,16 +170,19 @@ class Question:
         self.stats = [round(i/sum_counts, 1) for i in self.counts]
 
 
-def get_all_questions():
+def get_all_questions(include=None):
     """
-    Returns a dictionary of all questions.
+    Returns a dictionary of all questions including all respondents.
     :return:
     """
-    all_stats = {}
+    config = get_config()
+    if not include:
+        include = config.get_include_all()
+    all_questions = {}
     all_codes = get_all_codes()
     for code in all_codes:
-        all_stats[code] = Question(code)
-    return all_stats
+        all_questions[code] = Question(code, include=include)
+    return all_questions
 
 
 class QuestionSection:

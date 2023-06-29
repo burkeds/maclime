@@ -202,7 +202,7 @@ def get_stats_comparison(*args,
         for code in df.index.tolist():
             df.loc[code, 'subquestion'] = get_subquestion(code)
             responses = get_included_responses(code, include)
-            scores = np.array(get_scored_data(code, responses))
+            scores = np.array(get_scored_data(responses, code))
             scores = [i for i in scores if not pd.isna(i)]
             scores_inc = scores.copy()
             df.attrs['include_responses'] = responses
@@ -222,7 +222,7 @@ def get_stats_comparison(*args,
                 df.loc[code, 'hconf'] = None
 
             responses = get_included_responses(code, include_comp)
-            scores = np.array(get_scored_data(code, responses))
+            scores = np.array(get_scored_data(responses, code))
             scores = [i for i in scores if not pd.isna(i)]
             scores_comp = scores.copy()
             df.attrs['complementary_responses'] = responses
@@ -367,7 +367,7 @@ def plot_impact_statistics(impact_statistics,
     for i, label in enumerate(x_labels):
         question_code = df.index[i]
         responses = get_included_responses(question_code, include)
-        scores = get_scored_data(question_code, responses)
+        scores = get_scored_data(responses, question_code)
         valid = len(scores)
         p_value = df['pvalue'][question_code]
         x_labels[i] += "\n {}".format(valid)

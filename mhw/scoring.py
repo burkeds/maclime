@@ -7,15 +7,18 @@ from mhw.config import get_config
 
 
 # An array of responses passed returns an array of scored values using value_dict
-def get_scored_data(code, responses, value_dict=None):
+def get_scored_data(responses, code=None, value_dict=None):
     """
     Returns an array of scored values for a given question code and array of responses.
-    :param code: The question code
     :param responses: An array of responses
+    :param code: The question code
+    :param value_dict: The value dictionary for the question
     :return: An array of scored values
     """
     config = get_config()
     if value_dict is None:
+        if code is None:
+            raise ValueError("Either code or value_dict must be passed.")
         value_dict = config.get_value_dict(code)
     scores = []
     for response in responses:

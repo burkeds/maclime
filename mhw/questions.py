@@ -83,7 +83,7 @@ class Question:
             self.error = e
         try:
             if self.value_dict:
-                self.scores = get_scored_data(self.code, self.responses, self.value_dict)
+                self.scores = get_scored_data(self.responses, self.code, self.value_dict)
         except Exception as e:
             self.error = e
         try:

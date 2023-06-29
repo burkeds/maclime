@@ -120,7 +120,8 @@ class Question:
         Populates the counts and stats attributes.
         :return:
         """
-        if self.include == INCLUDE_ALL:
+        config = get_config()
+        if self.include == config.get_include_all():
             try:
                 self.counts = get_counts(self.code)
             except Exception as e:

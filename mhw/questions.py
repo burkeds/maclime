@@ -7,6 +7,8 @@ This module contains classes and methods for working with the questions and sect
 
 from mhw.read_results import get_included_responses
 from mhw.read_statistics import *
+from mhw.config import get_config
+from mhw.scoring import get_scored_data
 
 
 class Question:
@@ -34,6 +36,9 @@ class Question:
     description = ""
     question = ""
     subquestion = ""
+    responses = ""
+    value_dict = {}
+    scores = ""
     question_headers = ""
     possible_answers = ""
     counts = []
@@ -65,6 +70,20 @@ class Question:
             self.error = e
         try:
             self.subquestion = get_subquestion(code)
+        except Exception as e:
+            self.error = e
+        try:
+            self.responses = get_included_responses(self.include, self.code)
+        except Exception as e:
+            self.error = e
+        try:
+            config = get_config()
+            self.value_dict = config.get_value_dict(self.code)
+        except Exception as e:
+            self.error = e
+        try:
+            if self.value_dict:
+                self.scores = get_scored_data(self.code, self.responses, self.value_dict)
         except Exception as e:
             self.error = e
         try:

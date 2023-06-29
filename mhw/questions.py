@@ -49,7 +49,8 @@ class Question:
     error = ""
     data = pd.DataFrame()
 
-    def __init__(self, code, include=INCLUDE_ALL, description=""):
+    def __init__(self, code, include=None, description=""):
+        config = get_config()
         try:
             _ = CODEX[code]
             self.code = code
@@ -60,6 +61,8 @@ class Question:
         except Exception as e:
             self.error = e
         try:
+            if not include:
+                self.include = config.get_include_all()
             self.include = include
         except Exception as e:
             self.error = e
@@ -80,7 +83,6 @@ class Question:
         except Exception as e:
             self.error = e
         try:
-            config = get_config()
             self.value_dict = config.get_value_dict(self.code)
         except Exception as e:
             self.error = e

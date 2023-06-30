@@ -49,8 +49,10 @@ class Question:
     error = ""
     data = pd.DataFrame()
 
-    def __init__(self, code, include=None, description=""):
+    def __init__(self, code=None, include=None, description=""):
         config = get_config()
+        if not code:
+            raise Exception("No code provided.")
         try:
             _ = CODEX[code]
             self.code = code
@@ -173,17 +175,24 @@ class Question:
         self.stats = [round(i/sum_counts, 1) for i in self.counts]
 
 
-def get_all_questions(include=None):
+def get_questions(include=None, codes=None):
     """
-    Returns a dictionary of all questions including all respondents.
+    Returns a dictionary of questions from a list of codes and inclusion criteria. If codes is 'ALL', then all questions
+    are returned.
+    :param include: The inclusion criteria for the questions.
+    :param codes: The codes for the questions.
     :return:
     """
+    if not codes:
+        raise Exception("No codes provided. Set codes to 'ALL' to get all questions.")
     config = get_config()
+    all_questions = {}
+
     if not include:
         include = config.get_include_all()
-    all_questions = {}
-    all_codes = get_all_codes()
-    for code in all_codes:
+    if codes == 'ALL':
+        codes = get_all_codes()
+    for code in codes:
         all_questions[code] = Question(code, include=include)
     return all_questions
 
@@ -206,18 +215,17 @@ class QuestionSection:
     title = None
     subtitle = None
     codes = None
+    include = []
+    description = ""
     questions = None
 
-    def __init__(self, top_code=None, title=None, subtitle=None, codes=None):
+    def __init__(self, top_code=None, title=None, subtitle=None, codes=None, include=None, description=""):
         self.top_code = top_code
         self.title = title
         self.subtitle = subtitle
         self.codes = codes
+        self.include = include
+        self.description = description
 
         if self.codes:
-            self.get_questions()
-
-    def get_questions(self):
-        self.questions = {}
-        for code in self.codes:
-            self.questions[code] = Question(code)
+            self.questions = get_questions(include=self.include, codes=self.codes)

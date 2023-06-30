@@ -15,13 +15,14 @@ you have defined in a survey specific file such as mhw_spring_2022.
 
 # Import some useful packages
 import os
+os.chdir("..")
 from textwrap import wrap
 
 # Configure the mhw package. This must be done before importing anything from mhw.
 import mhw.config
 CONFIG = mhw.config.create_config()
-CONFIG.set_results_file(io=r'working/results/results-survey265235_2023.xls', header=0, skiprows=[1], index_col=0)
-CONFIG.set_statistics_file(io=r'working/results/statistic-survey265235_2023.xls', header=None)
+CONFIG.set_results_file(io=r"working/results/results-survey265235_2023.xls", header=0, skiprows=[1], index_col=0)
+CONFIG.set_statistics_file(io=r"working/results/statistic-survey265235_2023.xls", header=None)
 CONFIG.set_population(350)
 
 # Import your survey file
@@ -212,7 +213,7 @@ for key in output_keys:
             callback_args={'title': mh2.title,
                            'description': description,
                            'save_figure': False})
-
+    """
     for section in sections[1:]:
         if section.top_code == 'AE6':
             analyze(include=include,
@@ -242,3 +243,4 @@ for key in output_keys:
                                    'description': description,
                                    'save_figure': False})
 print("END")
+"""

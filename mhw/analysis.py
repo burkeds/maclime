@@ -35,7 +35,7 @@ def analyze(include, stats_callback=None, stats_args=None, include_other=None, f
                            **stats_args)
 
     if figure_callback:
-        figure_callback(**callback_args, complement=False)
-        figure_callback(**callback_args, complement=True)
+        figure_callback(**callback_args, complement=False, frame=stats)
+        figure_callback(**callback_args, complement=True, frame=stats)
 
     return stats

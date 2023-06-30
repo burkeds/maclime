@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from mhw.read_results import get_results, get_included_responses
-from mhw.questions import get_all_questions
+from mhw.questions import get_questions
 
 from mhw.config import get_config
 from mhw.read_statistics import get_subquestion, get_possible_answers
@@ -28,7 +28,7 @@ ZSCORE = CONFIG.get_zscore()
 POP = CONFIG.get_population()
 ALL_RESPONDENTS = CONFIG.get_all_respondents()
 RESULTS = get_results()
-QUESTIONS = get_all_questions()
+QUESTIONS = get_questions(codes='ALL')
 INCLUDE_ALL = CONFIG.get_include_all()
 
 if not RESULTS.empty:
@@ -142,7 +142,7 @@ def get_value_dict(code):
 
 # This is an example of a function performing useful statistical analysis using methods from mhw.
 # This should be used as a callback function passed to mhw.analysis.analyze().
-def get_stats_comparison(*args,
+def get_stats_comparison(codes,
                          include=None,
                          title="",
                          description="",
@@ -151,7 +151,7 @@ def get_stats_comparison(*args,
                          p_test=mwu_test):
     """
     Gets the statistics for the given questions and subquestions.
-    :param args: Any number of question codes or subquestion codes.
+    :param codes: Any number of question codes.
     :param include: An include array.
     :param title: Title of the analysis.
     :param description: Description of inclusion criteria.
@@ -166,8 +166,10 @@ def get_stats_comparison(*args,
     all_respondents = config.get_all_respondents()
     population = config.get_population()
     zscore = config.get_zscore()
-    questions = get_all_questions()
+    questions = get_questions(codes='ALL')
     include_comp = include_other
+    if not include:
+        include = include_all
     if not include_comp:
         include_comp = subtract_include(include_all, include)
     stats = ['subquestion',
@@ -182,90 +184,83 @@ def get_stats_comparison(*args,
              'comp_median',
              'comp_hconf',
              'pvalue']
-    frames = []
-    for codes in args:
-        frames.append(pd.DataFrame(index=codes, columns=stats))
-    for i in range(len(frames)):
-        df = frames[i]
-        df.attrs['include'] = include
-        df.attrs['include_comp'] = include_comp
-        df.attrs['title'] = title
-        df.attrs['description'] = description
-        df.attrs['sample_size'] = all_respondents
-        df.attrs['population_size'] = population
-        df.attrs['included_respondents'] = len(include)
-        df.attrs['complementary_respondents'] = len(include_comp)
+    df = pd.DataFrame(index=codes, columns=stats)
+    df.attrs['include'] = include
+    df.attrs['include_comp'] = include_comp
+    df.attrs['title'] = title
+    df.attrs['description'] = description
+    df.attrs['sample_size'] = all_respondents
+    df.attrs['population_size'] = population
+    df.attrs['included_respondents'] = len(include)
+    df.attrs['complementary_respondents'] = len(include_comp)
 
-        first_code = df.index[0]
-        df.attrs['question'] = questions[first_code].question
-        df.attrs['possible_answers'] = questions[first_code].possible_answers
-        for code in df.index.tolist():
-            df.loc[code, 'subquestion'] = get_subquestion(code)
-            responses = get_included_responses(code, include)
-            scores = np.array(get_scored_data(responses, code))
-            scores = [i for i in scores if not pd.isna(i)]
-            scores_inc = scores.copy()
-            df.attrs['include_responses'] = responses
-            df.attrs['include_scores'] = scores_inc
-            if len(scores) > 1:
-                df.loc[code, 'mean'] = float(np.mean(scores))
-                df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
-                lconf, median, hconf = get_confidence_interval(scores)
-                df.loc[code, 'lconf'] = float(lconf)
-                df.loc[code, 'median'] = float(median)
-                df.loc[code, 'hconf'] = float(hconf)
-            else:
-                df.loc[code, 'mean'] = None
-                df.loc[code, 'moe'] = None
-                df.loc[code, 'lconf'] = None
-                df.loc[code, 'median'] = None
-                df.loc[code, 'hconf'] = None
+    first_code = df.index[0]
+    df.attrs['question'] = questions[first_code].question
+    df.attrs['possible_answers'] = questions[first_code].possible_answers
+    for code in df.index.tolist():
+        df.loc[code, 'subquestion'] = get_subquestion(code)
+        responses = get_included_responses(code, include)
+        scores = np.array(get_scored_data(responses, code))
+        scores = [i for i in scores if not pd.isna(i)]
+        scores_inc = scores.copy()
+        df.attrs['include_responses'] = responses
+        df.attrs['include_scores'] = scores_inc
+        if len(scores) > 1:
+            df.loc[code, 'mean'] = float(np.mean(scores))
+            df.loc[code, 'moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
+            lconf, median, hconf = get_confidence_interval(scores)
+            df.loc[code, 'lconf'] = float(lconf)
+            df.loc[code, 'median'] = float(median)
+            df.loc[code, 'hconf'] = float(hconf)
+        else:
+            df.loc[code, 'mean'] = None
+            df.loc[code, 'moe'] = None
+            df.loc[code, 'lconf'] = None
+            df.loc[code, 'median'] = None
+            df.loc[code, 'hconf'] = None
 
-            responses = get_included_responses(code, include_comp)
-            scores = np.array(get_scored_data(responses, code))
-            scores = [i for i in scores if not pd.isna(i)]
-            scores_comp = scores.copy()
-            df.attrs['complementary_responses'] = responses
-            df.attrs['complementary_scores'] = scores_comp
-            if len(scores) > 1:
-                df.loc[code, 'comp_mean'] = float(np.mean(scores))
-                df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
-                lconf, median, hconf = get_confidence_interval(scores)
-                df.loc[code, 'comp_lconf'] = float(lconf)
-                df.loc[code, 'comp_median'] = float(median)
-                df.loc[code, 'comp_hconf'] = float(hconf)
-            else:
-                df.loc[code, 'comp_mean'] = None
-                df.loc[code, 'comp_moe'] = None
-                df.loc[code, 'comp_lconf'] = None
-                df.loc[code, 'comp_median'] = None
-                df.loc[code, 'comp_hconf'] = None
+        responses = get_included_responses(code, include_comp)
+        scores = np.array(get_scored_data(responses, code))
+        scores = [i for i in scores if not pd.isna(i)]
+        scores_comp = scores.copy()
+        df.attrs['complementary_responses'] = responses
+        df.attrs['complementary_scores'] = scores_comp
+        if len(scores) > 1:
+            df.loc[code, 'comp_mean'] = float(np.mean(scores))
+            df.loc[code, 'comp_moe'] = float(standard_error(scores) * zscore * fpc(population, len(scores)))
+            lconf, median, hconf = get_confidence_interval(scores)
+            df.loc[code, 'comp_lconf'] = float(lconf)
+            df.loc[code, 'comp_median'] = float(median)
+            df.loc[code, 'comp_hconf'] = float(hconf)
+        else:
+            df.loc[code, 'comp_mean'] = None
+            df.loc[code, 'comp_moe'] = None
+            df.loc[code, 'comp_lconf'] = None
+            df.loc[code, 'comp_median'] = None
+            df.loc[code, 'comp_hconf'] = None
 
-            if scores_inc and scores_comp:
-                df.loc[code, 'pvalue'] = float(p_test(scores_inc, scores_comp))
-            else:
-                df.loc[code, 'pvalue'] = None
-        frames[i] = df.replace(pd.NA, np.nan)
-        if print_table:
-            print("********************************************************************")
-            print("Top question text: {}".format(df.attrs['question']))
-            print("Possible answers: {}".format(df.attrs['possible_answers']))
-            print(df.round(2).to_csv(sep='\t'))
-            print("********************************************************************")
-    if len(frames) == 1:
-        return frames[0]
-    else:
-        return frames
+        if scores_inc and scores_comp:
+            df.loc[code, 'pvalue'] = float(p_test(scores_inc, scores_comp))
+        else:
+            df.loc[code, 'pvalue'] = None
+    df = df.replace(pd.NA, np.nan)
+    if print_table:
+        print("********************************************************************")
+        print("Top question text: {}".format(df.attrs['question']))
+        print("Possible answers: {}".format(df.attrs['possible_answers']))
+        print(df.round(2).to_csv(sep='\t'))
+        print("********************************************************************")
+    return df
 
 
 # This is a function used to produce a desired figure. Can be used as a callback function in analyze.
-def make_histo(frame, title, description, complementary=False, save_figure=False, x_labels=None, y_label=None):
+def make_histo(frame, title, description, complement=False, save_figure=False, x_labels=None, y_label=None):
     """
     Makes a histogram of the data in the given frame.
     :param frame: The frame to be plotted
     :param title: The title of the plot
     :param description: The description of the plot
-    :param complementary: Whether to use the complementary scores
+    :param complement: Whether to use the complementary scores
     :param save_figure: Whether to save the figure
     :param x_labels: The labels for the x axis
     :param y_label: The labels for the y axis
@@ -273,7 +268,8 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
     """
     plt.clf()
     sample = frame.attrs['sample_size']
-    if complementary:
+
+    if complement:
         data = frame.attrs['complementary_scores']
         included_respondents = frame.attrs['complementary_respondents']
         res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
@@ -283,13 +279,16 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
         included_respondents = frame.attrs['included_respondents']
         res_str = "(" + str(included_respondents) + " of " + str(sample) + ")"
     title += res_str
+
     if not x_labels:
-        possible_answers = frame.attrs['possible_answers']
-        bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
-        x_labels = [x for x in possible_answers if x not in bad_labels]
+        x_labels = frame.attrs['possible_answers']
+    bad_labels = ['Not applicable', 'No answer', 'Not completed or Not displayed']
+    x_labels = [x for x in x_labels if x not in bad_labels]
+
     if not y_label:
         y_label = 'Respondent count'
 
+    print(x_labels)
     _, ax = plt.subplots()
     arrays, __, patches = ax.hist(data,
                                   bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
@@ -311,7 +310,7 @@ def make_histo(frame, title, description, complementary=False, save_figure=False
 
 
 # Another option for a figure callback function. Produces a bar chart.
-def plot_impact_statistics(impact_statistics,
+def plot_impact_statistics(frame=None,
                            complement=False,
                            title="",
                            x_labels=None,
@@ -320,7 +319,7 @@ def plot_impact_statistics(impact_statistics,
                            save_figure=False):
     """
     Plots the impact statistics for the given question.
-    :param impact_statistics: The impact statistics for the question
+    :param frame: The impact statistics for the question
     :param complement: Whether to plot the complementary statistics
     :param title: The title of the plot
     :param x_labels: The labels for the x-axis
@@ -329,8 +328,10 @@ def plot_impact_statistics(impact_statistics,
     :param save_figure: Whether to save the figure
     :return:
     """
+    if not frame:
+        raise Exception("No dataframe given.")
     plt.clf()
-    df = impact_statistics
+    df = frame
     code = df.index[0]
 
     included_respondents = df.attrs['included_respondents']

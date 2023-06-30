@@ -115,8 +115,8 @@ class Configuration:
         self._FONT = args
         rc('font', **args)
 
-    def get_value_dict(self):
-        return self._VALUE_DICT_CALLBACK
+    def get_value_dict(self, code):
+        return self._VALUE_DICT_CALLBACK(code)
 
     def set_value_dict_callback(self, callback):
         self._VALUE_DICT_CALLBACK = callback

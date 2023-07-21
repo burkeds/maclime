@@ -287,8 +287,6 @@ def make_histo(frame, title, description, complement=False, save_figure=False, x
 
     if not y_label:
         y_label = 'Respondent count'
-
-    print(x_labels)
     _, ax = plt.subplots()
     arrays, __, patches = ax.hist(data,
                                   bins=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
@@ -313,6 +311,7 @@ def make_histo(frame, title, description, complement=False, save_figure=False, x
 def plot_impact_statistics(frame=None,
                            complement=False,
                            title="",
+                           description="",
                            x_labels=None,
                            y_label=None,
                            include_sample_size=True,
@@ -322,13 +321,14 @@ def plot_impact_statistics(frame=None,
     :param frame: The impact statistics for the question
     :param complement: Whether to plot the complementary statistics
     :param title: The title of the plot
+    :param description: The description of the plot
     :param x_labels: The labels for the x-axis
     :param y_label: The label for the y-axis
     :param include_sample_size: Whether to include the sample size in the title
     :param save_figure: Whether to save the figure
     :return:
     """
-    if not frame:
+    if frame is None:
         raise Exception("No dataframe given.")
     plt.clf()
     df = frame

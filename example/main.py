@@ -15,7 +15,6 @@ you have defined in a survey specific file such as mhw_spring_2022.
 
 # Import some useful packages
 import os
-os.chdir("..")
 from textwrap import wrap
 
 # Configure the mhw package. This must be done before importing anything from mhw.
@@ -26,11 +25,11 @@ CONFIG.set_statistics_file(io=r"working/results/statistic-survey265235_2023.xls"
 CONFIG.set_population(350)
 
 # Import your survey file
-from mhw_spring_2023 import *
+from example.mhw_spring_2023 import *
 CONFIG.set_value_dict_callback(get_value_dict)
 
 # Import your include arrays
-from my_includes import *
+from example.my_includes import *
 
 # QuestionSection objects can be used to define survey sections and access questions.
 from mhw.questions import QuestionSection
@@ -175,8 +174,8 @@ xlabels = ["classwork",
            "students",
            "not academic"]
 xlabels = ['\n'.join(wrap(label, 20)) for label in xlabels]
-ylabels = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
-ylabels = ['\n'.join(wrap(label, 10)) for label in ylabels]
+ylabel = ["strongly negative", "negative", "neutral", "positive", "strongly positive"]
+ylabel = ['\n'.join(wrap(label, 10)) for label in ylabel]
 
 output_keys = output_dict.keys()
 top = os.getcwd()
@@ -193,7 +192,7 @@ for key in output_keys:
         os.mkdir(path)
         os.chdir(path)
         
-    # Print to system file. Comment this line to print to python console.
+    # Print to system file. Comment the line below to print to python console.
     # sys.stdout = open(desc+".txt", "w")
 
     print("Description:\t", description)
@@ -213,7 +212,7 @@ for key in output_keys:
             callback_args={'title': mh2.title,
                            'description': description,
                            'save_figure': False})
-    """
+
     for section in sections[1:]:
         if section.top_code == 'AE6':
             analyze(include=include,
@@ -224,11 +223,11 @@ for key in output_keys:
                                 'description': description,
                                 'print_table': False},
                     figure_callback=plot_impact_statistics,
-                    callback_args={'title': mh2.title,
+                    callback_args={'title': section.title,
                                    'description': description,
                                    'save_figure': False,
                                    'x_labels': xlabels,
-                                   'y_labels': ylabels})
+                                   'y_label': ylabel})
 
         else:
             analyze(include=include,
@@ -238,9 +237,8 @@ for key in output_keys:
                                 'title': section.title,
                                 'description': description,
                                 'print_table': False},
-                    figure_callback=make_histo,
-                    callback_args={'title': mh2.title,
+                    figure_callback=plot_impact_statistics,
+                    callback_args={'title': section.title,
                                    'description': description,
                                    'save_figure': False})
 print("END")
-"""

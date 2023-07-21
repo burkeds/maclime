@@ -10,7 +10,7 @@ import numpy as np
 import math
 from scipy.stats import mannwhitneyu  
 
-from mhw.config import get_config
+from maclime.config import get_config
 CONFIG = get_config()
 
 

@@ -15,11 +15,12 @@ you have defined in a survey specific file such as mhw_spring_2022.
 
 # Import some useful packages
 import os
+os.chdir("..")
 from textwrap import wrap
 
-# Configure the mhw package. This must be done before importing anything from mhw.
-import mhw.config
-CONFIG = mhw.config.create_config()
+# Configure the maclime package. This must be done before importing anything from maclime.
+import maclime.config
+CONFIG = maclime.config.create_config()
 CONFIG.set_results_file(io=r"working/results/results-survey265235_2023.xls", header=0, skiprows=[1], index_col=0)
 CONFIG.set_statistics_file(io=r"working/results/statistic-survey265235_2023.xls", header=None)
 CONFIG.set_population(350)
@@ -32,12 +33,12 @@ CONFIG.set_value_dict_callback(get_value_dict)
 from example.my_includes import *
 
 # QuestionSection objects can be used to define survey sections and access questions.
-from mhw.questions import QuestionSection
+from maclime.questions import QuestionSection
 
 # Import figure callback functions
 
 # Import statistics functions that return a dataframe
-from mhw.analysis import analyze
+from maclime.analysis import analyze
 from example.mhw_spring_2023 import get_stats_comparison, make_histo, plot_impact_statistics
 
 sample_size = CONFIG.get_all_respondents()

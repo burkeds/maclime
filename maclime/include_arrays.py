@@ -13,7 +13,7 @@ filter your data.
 """
 
 from collections import Counter
-from mhw.read_results import get_results
+from maclime.read_results import get_results
 
 
 # Returns a list of index values (respondent IDs) that have the response to the code.

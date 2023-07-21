@@ -8,7 +8,7 @@ This file holds functions for reading the limesurvey results file and extracting
 """
 import pandas as pd
 
-from mhw.config import get_config
+from maclime.config import get_config
 CONFIG = get_config()
 
 

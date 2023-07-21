@@ -5,8 +5,11 @@ Created on June 28, 2023
 This module contains methods which accept callback functions to perform some sort of analysis on a set of questions.
 """
 
-from example.mhw_spring_2023 import INCLUDE_ALL
-from mhw.include_arrays import subtract_include
+from maclime.include_arrays import subtract_include
+from maclime.config import get_config
+
+CONFIG = get_config()
+INCLUDE_ALL = CONFIG.get_include_all()
 
 
 def analyze(include, stats_callback=None, stats_args=None, include_other=None, figure_callback=None,

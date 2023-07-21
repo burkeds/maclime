@@ -15,13 +15,13 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from mhw.read_results import get_results, get_included_responses
-from mhw.questions import get_questions
+from maclime.read_results import get_results, get_included_responses
+from maclime.questions import get_questions
 
-from mhw.config import get_config
-from mhw.read_statistics import get_subquestion, get_possible_answers
-from mhw.scoring import get_scored_data
-from mhw.utils import mwu_test, standard_error, fpc, get_confidence_interval
+from maclime.config import get_config
+from maclime.read_statistics import get_subquestion, get_possible_answers
+from maclime.scoring import get_scored_data
+from maclime.utils import mwu_test, standard_error, fpc, get_confidence_interval
 
 CONFIG = get_config()
 ZSCORE = CONFIG.get_zscore()
@@ -32,12 +32,12 @@ QUESTIONS = get_questions(codes='ALL')
 INCLUDE_ALL = CONFIG.get_include_all()
 
 if not RESULTS.empty:
-    from mhw.include_arrays import *
+    from maclime.include_arrays import *
 
 
 # Store dictionaries that map responses to arbitrary
 # numerical values valid for a list of questions.
-# This is passed to the configuration object returned by mhw.config.get_config().
+# This is passed to the configuration object returned by maclime.config.get_config().
 def get_value_dict(code):
     """
     Returns a dictionary that maps responses to arbitrary numerical values for a given question code.
@@ -140,8 +140,8 @@ def get_value_dict(code):
         return None
 
 
-# This is an example of a function performing useful statistical analysis using methods from mhw.
-# This should be used as a callback function passed to mhw.analysis.analyze().
+# This is an example of a function performing useful statistical analysis using methods from maclime.
+# This should be used as a callback function passed to maclime.analysis.analyze().
 def get_stats_comparison(codes,
                          include=None,
                          title="",
@@ -157,7 +157,7 @@ def get_stats_comparison(codes,
     :param description: Description of inclusion criteria.
     :param include_other: Another include array for comparison.
     :param print_table: When true, prints the table to the console.
-    :param p_test: The p-test to use. This is mhw.utils.mwu_test() by default but any callback function that takes two
+    :param p_test: The p-test to use. This is maclime.utils.mwu_test() by default but any callback function that takes two
                    arrays and returns a float can be substituted.
     :return: A dataframe with the statistics for the given questions and subquestions.
     """

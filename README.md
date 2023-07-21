@@ -1,4 +1,4 @@
-# mhwpy
+# maclime
 Code used to analyze the McMaster Department of Physics and Astronomy mental health and wellness survey.
 Main is included as an example of how to use include arrays and the methods written for a given survey.
 For a given survey, the user must create a main file and call methods from a dedicated module for that survey. 

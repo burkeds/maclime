@@ -61,7 +61,7 @@ class Configuration:
             print("Creating new configuration object.")
             CONFIG = super(Configuration, cls).__new__(cls)
         else:
-            raise Exception("Configuration object already exists. Access the object with mhw.config.get_config().")
+            raise Exception("Configuration object already exists. Access the object with maclime.config.get_config().")
         return CONFIG
 
     def __init__(self):

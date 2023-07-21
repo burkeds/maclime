@@ -8,9 +8,9 @@ This version of the code requires the statistics file but these data could
 be obtained from the results file in future versions.
 """
 import pandas as pd
-from mhw.utils import char_split, merge
+from maclime.utils import char_split, merge
 
-from mhw.config import get_config
+from maclime.config import get_config
 CONFIG = get_config()
 STATISTICS = CONFIG.get_statistics_file()
 INCLUDE_ALL = CONFIG.get_include_all()

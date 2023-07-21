@@ -5,10 +5,10 @@ Created on June 27, 2023
 This module contains classes and methods for working with the questions and sections of a survey.
 """
 
-from mhw.read_results import get_included_responses
-from mhw.read_statistics import *
-from mhw.config import get_config
-from mhw.scoring import get_scored_data
+from maclime.read_results import get_included_responses
+from maclime.read_statistics import *
+from maclime.config import get_config
+from maclime.scoring import get_scored_data
 
 
 class Question:

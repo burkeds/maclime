@@ -4,12 +4,12 @@ Created on June 27, 2023
 @author: Devin Burke
 
 Use this file to define inclusion arrays for your analysis.
-Methods found within mhw.include_arrays can be used to create include arrays.
+Methods found within maclime.include_arrays can be used to create include arrays.
 Each include array is a list of respondent IDs that match the inclusion criteria.
 Inclusion criteria can be defined by a single question or a combination of questions.
 """
 
-from mhw.include_arrays import *
+from maclime.include_arrays import *
 
 # Define inclusion arrays
 # Any include arrays defined here need to be added to __all__ to be imported with *

@@ -3,7 +3,7 @@ Created on May 18, 2022
 
 @author: Devin Burke
 """
-from mhw.config import get_config
+from maclime.config import get_config
 
 
 # An array of responses passed returns an array of scored values using value_dict
